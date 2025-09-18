@@ -13,12 +13,37 @@ class TelaPrincipalView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // IMAGEM AQUI
-            Image.asset(
-              'image/LogoCookList.png',
-              height: 120, // ajusta o tamanho
+            // TÍTULO
+            RichText(
+              text: const TextSpan(
+                children: [
+                  TextSpan(
+                    text: "Chef",
+                    style: TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  TextSpan(
+                    text: "LIST",
+                    style: TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 150, 54, 54), // roxo
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 40), // espaço entre a imagem e os botões
+            const SizedBox(height: 20),
+
+            // IMAGEM
+            Image.asset(
+              'image/LogoChefList.png',
+              height: 300,
+            ),
+            const SizedBox(height: 40),
 
             // BOTÃO FAZER LOGIN
             ElevatedButton(
@@ -29,9 +54,9 @@ class TelaPrincipalView extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 23, 2, 63), // cor de fundo
-                foregroundColor: Colors.white, // cor do texto
-                minimumSize: const Size(200, 50), // tamanho fixo
+                backgroundColor: const Color.fromARGB(255, 150, 54, 54),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(200, 50),
               ),
               child: const Text("Fazer Login"),
             ),
@@ -46,9 +71,9 @@ class TelaPrincipalView extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,// cor de fundo
-                foregroundColor: const Color.fromARGB(255, 23, 2, 63), // cor do texto
-                minimumSize: const Size(200, 50), // tamanho fixo
+                backgroundColor: Colors.white,
+                foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+                minimumSize: const Size(200, 50),
               ),
               child: const Text("Fazer Cadastro"),
             ),
