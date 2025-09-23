@@ -30,7 +30,7 @@ class TelaPrincipalView extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 40,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 150, 54, 54), // roxo
+                      color: Color.fromARGB(255, 150, 54, 54), // Vermelho Padrão do App
                     ),
                   ),
                 ],

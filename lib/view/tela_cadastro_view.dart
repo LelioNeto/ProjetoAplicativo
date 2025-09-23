@@ -5,55 +5,114 @@ class TelaCadastroView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    InputDecoration buildInputDecoration(String label, IconData icon, {String? hintText}) {
+      return InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        filled: true,
+        fillColor: Colors.white10,
+        border: const OutlineInputBorder(),
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white10),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: Color.fromARGB(255, 150, 54, 54), width: 2),
+        ),
+        prefixIcon: Icon(icon, color: Colors.white),
+        floatingLabelStyle: const TextStyle(
+          color: Color.fromARGB(255, 150, 54, 54),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 15, 15, 15),
       appBar: AppBar(
-        title: const Text("Cadastro"),
+        title: const Text(
+          "Cadastro",
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: const Color.fromARGB(255, 44, 43, 43),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const TextField(
-              decoration: InputDecoration(
-                labelText: "Nome",
-                filled: true,
-                fillColor: Colors.white10,
-                border: OutlineInputBorder(),
+      body: Theme(
+        data: Theme.of(context).copyWith(
+          textSelectionTheme: const TextSelectionThemeData(
+            cursorColor: Color.fromARGB(255, 150, 54, 54),
+            selectionColor: Color.fromARGB(255, 150, 54, 54),
+            selectionHandleColor: Color.fromARGB(255, 150, 54, 54),
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 24),
+
+              // Ícone/logo no topo
+              Image.asset(
+                'image/LogoChefList.png',
+                height: 230,
               ),
-              style: TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: "Email",
-                filled: true,
-                fillColor: Colors.white10,
-                border: OutlineInputBorder(),
+             
+
+              // Nome
+              TextField(
+                decoration: buildInputDecoration("Nome", Icons.person),
+                style: const TextStyle(color: Colors.white),
+                cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
-              style: TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            const TextField(
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: "Senha",
-                filled: true,
-                fillColor: Colors.white10,
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+
+              // Email
+              TextField(
+                decoration: buildInputDecoration("Email", Icons.email),
+                style: const TextStyle(color: Colors.white),
+                cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
-              style: TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                // futuramente: salvar no banco
-              },
-              child: const Text("Cadastrar"),
-            )
-          ],
+              const SizedBox(height: 16),
+
+              // Senha
+              TextField(
+                obscureText: true,
+                decoration: buildInputDecoration("Senha", Icons.lock),
+                style: const TextStyle(color: Colors.white),
+                cursorColor: const Color.fromARGB(255, 150, 54, 54),
+              ),
+              const SizedBox(height: 16),
+
+              // Confirmação de senha
+              TextField(
+                obscureText: true,
+                decoration: buildInputDecoration("Confirme sua Senha", Icons.lock),
+                style: const TextStyle(color: Colors.white),
+                cursorColor: const Color.fromARGB(255, 150, 54, 54),
+              ),
+              const SizedBox(height: 16),
+
+              // Telefone
+              TextField(
+                keyboardType: TextInputType.phone,
+                decoration: buildInputDecoration("Número de Telefone", Icons.phone, hintText: "(99) 99999-9999"),
+                style: const TextStyle(color: Colors.white),
+                cursorColor: const Color.fromARGB(255, 150, 54, 54),
+              ),
+              const SizedBox(height: 24),
+
+              // Botão Cadastrar
+              ElevatedButton(
+                onPressed: () {
+                  // futuramente: salvar no banco
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text("Cadastrar"),
+              ),
+            ],
+          ),
         ),
       ),
     );
