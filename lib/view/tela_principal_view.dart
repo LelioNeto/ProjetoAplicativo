@@ -30,7 +30,12 @@ class TelaPrincipalView extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 40,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 150, 54, 54), // Vermelho Padrão do App
+                      color: Color.fromARGB(
+                        255,
+                        150,
+                        54,
+                        54,
+                      ), // Vermelho Padrão do App
                     ),
                   ),
                 ],
@@ -39,10 +44,7 @@ class TelaPrincipalView extends StatelessWidget {
             const SizedBox(height: 20),
 
             // IMAGEM
-            Image.asset(
-              'image/LogoChefList.png',
-              height: 300,
-            ),
+            Image.asset('image/LogoChefList.png', height: 300),
             const SizedBox(height: 40),
 
             // BOTÃO FAZER LOGIN
@@ -50,7 +52,9 @@ class TelaPrincipalView extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const TelaLoginView()),
+                  MaterialPageRoute(
+                    builder: (context) => const TelaLoginView(),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -67,7 +71,9 @@ class TelaPrincipalView extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const TelaCadastroView()),
+                  MaterialPageRoute(
+                    builder: (context) => const TelaCadastroView(),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(

@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 import 'view/tela_principal_view.dart';
+import 'view/tela_redefinir_senha_view.dart'; // importa a tela de redefinir senha
 
 void main() {
-  runApp(
-    DevicePreview(
-      enabled: true, 
-      builder: (context) => const MyApp(),
-    ),
-  );
+  runApp(DevicePreview(enabled: true, builder: (context) => const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -18,7 +14,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      builder: DevicePreview.appBuilder, 
+      builder: DevicePreview.appBuilder,
+      // aqui registramos as rotas
+      routes: {'/redefinir-senha': (context) => const TelaRedefinirSenhaView()},
       home: const TelaPrincipalView(),
     );
   }

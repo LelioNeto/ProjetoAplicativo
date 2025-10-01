@@ -16,7 +16,10 @@ class TelaLoginView extends StatelessWidget {
           borderSide: BorderSide(color: Colors.white10),
         ),
         focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Color.fromARGB(255, 150, 54, 54), width: 2),
+          borderSide: BorderSide(
+            color: Color.fromARGB(255, 150, 54, 54),
+            width: 2,
+          ),
         ),
         prefixIcon: Icon(icon, color: Colors.white),
         floatingLabelStyle: const TextStyle(
@@ -28,10 +31,7 @@ class TelaLoginView extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 15, 15, 15),
       appBar: AppBar(
-        title: const Text(
-          "Login",
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text("Login", style: TextStyle(color: Colors.black)),
         backgroundColor: const Color.fromARGB(255, 44, 43, 43),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
@@ -51,11 +51,7 @@ class TelaLoginView extends StatelessWidget {
               const SizedBox(height: 24),
 
               // Ícone/logo no topo
-              Image.asset(
-                'image/LogoChefList.png',
-                height: 230,
-              ),
-             
+              Image.asset('image/LogoChefList.png', height: 230),
 
               // Email
               TextField(
@@ -78,16 +74,16 @@ class TelaLoginView extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   onPressed: () {
-                    // ação futura: redefinir senha
+                    Navigator.pushNamed(context, '/redefinir-senha');
                   },
                   style: ButtonStyle(
-                    overlayColor: WidgetStateProperty.all(Colors.transparent), // sem efeito ao clicar
+                    overlayColor: WidgetStateProperty.all(
+                      Colors.transparent,
+                    ), // sem efeito ao clicar
                   ),
                   child: const Text(
                     "Esqueci minha senha",
-                    style: TextStyle(
-                      color: Color.fromARGB(255, 150, 54, 54),
-                    ),
+                    style: TextStyle(color: Color.fromARGB(255, 150, 54, 54)),
                   ),
                 ),
               ),
@@ -96,23 +92,24 @@ class TelaLoginView extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const TelaCadastroView()),
-      );
-    },
-    style: ButtonStyle(
-      overlayColor: WidgetStateProperty.all(Colors.transparent), // sem efeito ao clicar
-    ),
-    child: const Text(
-      "Não tem uma conta? Cadastre-se",
-      style: TextStyle(
-        color: Color.fromARGB(255, 150, 54, 54),
-      ),
-    ),
-  ),
-),
-
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TelaCadastroView(),
+                      ),
+                    );
+                  },
+                  style: ButtonStyle(
+                    overlayColor: WidgetStateProperty.all(
+                      Colors.transparent,
+                    ), // sem efeito ao clicar
+                  ),
+                  child: const Text(
+                    "Não tem uma conta? Cadastre-se",
+                    style: TextStyle(color: Color.fromARGB(255, 150, 54, 54)),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 24),
 
