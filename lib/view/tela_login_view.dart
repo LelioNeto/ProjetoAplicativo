@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_app/view/tela_cadastro_view.dart';
 
 class TelaLoginView extends StatelessWidget {
   const TelaLoginView({super.key});
@@ -90,6 +91,28 @@ class TelaLoginView extends StatelessWidget {
                   ),
                 ),
               ),
+              // "Não tem uma conta? Cadastre-se"
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const TelaCadastroView()),
+      );
+    },
+    style: ButtonStyle(
+      overlayColor: WidgetStateProperty.all(Colors.transparent), // sem efeito ao clicar
+    ),
+    child: const Text(
+      "Não tem uma conta? Cadastre-se",
+      style: TextStyle(
+        color: Color.fromARGB(255, 150, 54, 54),
+      ),
+    ),
+  ),
+),
+
 
               const SizedBox(height: 24),
 
