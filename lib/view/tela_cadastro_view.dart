@@ -5,7 +5,11 @@ class TelaCadastroView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    InputDecoration buildInputDecoration(String label, IconData icon, {String? hintText}) {
+    InputDecoration buildInputDecoration(
+      String label,
+      IconData icon, {
+      String? hintText,
+    }) {
       return InputDecoration(
         labelText: label,
         hintText: hintText,
@@ -16,7 +20,10 @@ class TelaCadastroView extends StatelessWidget {
           borderSide: BorderSide(color: Colors.white10),
         ),
         focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Color.fromARGB(255, 150, 54, 54), width: 2),
+          borderSide: BorderSide(
+            color: Color.fromARGB(255, 150, 54, 54),
+            width: 2,
+          ),
         ),
         prefixIcon: Icon(icon, color: Colors.white),
         floatingLabelStyle: const TextStyle(
@@ -28,10 +35,7 @@ class TelaCadastroView extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 15, 15, 15),
       appBar: AppBar(
-        title: const Text(
-          "Cadastro",
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text("Cadastro", style: TextStyle(color: Colors.black)),
         backgroundColor: const Color.fromARGB(255, 44, 43, 43),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
@@ -50,11 +54,7 @@ class TelaCadastroView extends StatelessWidget {
               const SizedBox(height: 24),
 
               // Ícone/logo no topo
-              Image.asset(
-                'image/LogoChefList.png',
-                height: 230,
-              ),
-             
+              Image.asset('image/LogoChefList.png', height: 230),
 
               // Nome
               TextField(
@@ -84,7 +84,10 @@ class TelaCadastroView extends StatelessWidget {
               // Confirmação de senha
               TextField(
                 obscureText: true,
-                decoration: buildInputDecoration("Confirme sua Senha", Icons.lock),
+                decoration: buildInputDecoration(
+                  "Confirme sua Senha",
+                  Icons.lock,
+                ),
                 style: const TextStyle(color: Colors.white),
                 cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
@@ -93,7 +96,11 @@ class TelaCadastroView extends StatelessWidget {
               // Telefone
               TextField(
                 keyboardType: TextInputType.phone,
-                decoration: buildInputDecoration("Número de Telefone", Icons.phone, hintText: "(99) 99999-9999"),
+                decoration: buildInputDecoration(
+                  "Telefone number",
+                  Icons.phone,
+                  hintText: "(99) 99999-9999",
+                ),
                 style: const TextStyle(color: Colors.white),
                 cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
