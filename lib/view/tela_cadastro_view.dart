@@ -97,7 +97,7 @@ class TelaCadastroView extends StatelessWidget {
               TextField(
                 keyboardType: TextInputType.phone,
                 decoration: buildInputDecoration(
-                  "Telefone number",
+                  "Número de Telefone",
                   Icons.phone,
                   hintText: "(99) 99999-9999",
                 ),
