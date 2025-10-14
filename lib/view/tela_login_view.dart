@@ -1,16 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_app/view/tela_cadastro_view.dart';
+import 'tela_cadastro_view.dart';
+import 'tela_redefinir_senha_view.dart';
+import 'tela_principal_view.dart';
 
-class TelaLoginView extends StatelessWidget {
+class TelaLoginView extends StatefulWidget {
   const TelaLoginView({super.key});
 
   @override
+  State<TelaLoginView> createState() => _TelaLoginViewState();
+}
+
+class _TelaLoginViewState extends State<TelaLoginView> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController senhaController = TextEditingController();
+
+  void _realizarLogin() {
+    String email = emailController.text.trim();
+    String senha = senhaController.text.trim();
+
+    if (email.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, preencha todos os campos.'),
+          backgroundColor: Colors.redAccent,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    if (!email.contains('@') || !email.contains('.')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Digite um e-mail válido.'),
+          backgroundColor: Colors.orangeAccent,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const TelaPrincipalView()),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    InputDecoration buildInputDecoration(String label, IconData icon) {
+    InputDecoration buildInputDecoration(String label, IconData icon,
+        {String? hintText}) {
       return InputDecoration(
         labelText: label,
+        hintText: hintText,
         filled: true,
-        fillColor: Colors.white10,
+        fillColor: Colors.transparent, // <-- transparente
         border: const OutlineInputBorder(),
         enabledBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: Colors.white10),
@@ -31,9 +75,10 @@ class TelaLoginView extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 15, 15, 15),
       appBar: AppBar(
-        title: const Text("Login", style: TextStyle(color: Colors.black)),
-        backgroundColor: const Color.fromARGB(255, 44, 43, 43),
-        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text("Login", style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
+        backgroundColor: const Color(0xFF1A1A1A),
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Color.fromARGB(255, 255, 255, 255)),
       ),
       body: Theme(
         data: Theme.of(context).copyWith(
@@ -43,87 +88,93 @@ class TelaLoginView extends StatelessWidget {
             selectionHandleColor: Color.fromARGB(255, 150, 54, 54),
           ),
         ),
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 24),
-
-              // Ícone/logo no topo
               Image.asset('image/LogoChefList.png', height: 230),
+              const SizedBox(height: 16),
 
-              // Email
               TextField(
-                decoration: buildInputDecoration("Email", Icons.email),
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
                 style: const TextStyle(color: Colors.white),
-                cursorColor: const Color.fromARGB(255, 150, 54, 54),
+                decoration: buildInputDecoration("E-mail", Icons.email),
               ),
               const SizedBox(height: 16),
 
-              // Senha
               TextField(
+                controller: senhaController,
                 obscureText: true,
-                decoration: buildInputDecoration("Senha", Icons.lock),
                 style: const TextStyle(color: Colors.white),
-                cursorColor: const Color.fromARGB(255, 150, 54, 54),
+                decoration: buildInputDecoration("Senha", Icons.lock),
               ),
+              const SizedBox(height: 24),
 
-              // "Esqueci minha senha"
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/redefinir-senha');
-                  },
-                  style: ButtonStyle(
-                    overlayColor: WidgetStateProperty.all(
-                      Colors.transparent,
-                    ), // sem efeito ao clicar
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _realizarLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text(
-                    "Esqueci minha senha",
-                    style: TextStyle(color: Color.fromARGB(255, 150, 54, 54)),
-                  ),
+                  child: const Text("Entrar"),
                 ),
               ),
-              // "Não tem uma conta? Cadastre-se"
+              const SizedBox(height: 16),
+
               Align(
-                alignment: Alignment.centerLeft,
+                alignment: Alignment.center,
                 child: TextButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const TelaCadastroView(),
+                        builder: (context) => const TelaRedefinirSenhaView(),
                       ),
                     );
                   },
                   style: ButtonStyle(
-                    overlayColor: WidgetStateProperty.all(
-                      Colors.transparent,
-                    ), // sem efeito ao clicar
+                    overlayColor:
+                        MaterialStateProperty.all(Colors.transparent),
                   ),
                   child: const Text(
-                    "Não tem uma conta? Cadastre-se",
-                    style: TextStyle(color: Color.fromARGB(255, 150, 54, 54)),
+                    "Esqueci minha senha",
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 150, 54, 54),
+                    ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
 
-              // Botão Entrar
-              ElevatedButton(
-                onPressed: () {
-                  // futuramente: chamar controller de login
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  minimumSize: const Size(double.minPositive, 50),
-                ),
-                child: const Text("Entrar"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Não tem uma conta?",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TelaCadastroView(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      "Cadastre-se",
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 150, 54, 54),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
