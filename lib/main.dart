@@ -1,21 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
+
+// Import das views
 import 'view/tela_principal_view.dart';
 import 'view/tela_login_view.dart';
 import 'view/tela_redefinir_senha_view.dart';
-import 'view/menu_view.dart';       // import do MenuView
-import 'services/auth_service.dart';
+import 'view/tela_cadastro_view.dart';
+import 'view/menu_view.dart';
+import 'view/lista_de_produtos_view.dart';
+import 'view/receitas_view.dart';
+import 'view/perfil_view.dart';
+import 'view/tela_conversor_medidas_view.dart';
+
+import 'services/auth_service.dart'; // serviço de autenticação
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Verifica se há usuário logado
+  // Verifica se há usuário logado (para controle de sessão)
   final auth = AuthService();
   final usuario = await auth.usuarioLogado();
 
   runApp(
     DevicePreview(
-      enabled: true,
+      enabled: true, // permite simular diferentes tamanhos de tela
       builder: (context) => MyApp(usuarioLogado: usuario),
     ),
   );
@@ -28,16 +36,29 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'App de Receitas',
       debugShowCheckedModeBanner: false,
       builder: DevicePreview.appBuilder,
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color(0xFF0F0F0F),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1A1A1A),
+          iconTheme: IconThemeData(color: Colors.white),
+          titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+        ),
+      ),
+      initialRoute: '/principal', // 🔹 inicia pela tela principal
       routes: {
-        '/redefinir-senha': (context) => const TelaRedefinirSenhaView(),
-        '/login': (context) => const TelaLoginView(),
         '/principal': (context) => const TelaPrincipalView(),
+        '/login': (context) => const TelaLoginView(),
+        '/cadastro': (context) => const TelaCadastroView(),
+        '/redefinir-senha': (context) => const TelaRedefinirSenhaView(),
         '/menu': (context) => const MenuView(),
+        '/lista-compras': (context) => const TelaListaComprasView(),
+        '/receitas': (context) => const TelaReceitasView(),
+        '/perfil': (context) => const TelaPerfilView(),
+        '/conversor-medidas': (context) => const TelaConversorMedidasView(),
       },
-      // Se já está logado → abre MenuView, senão → TelaPrincipalView
-      home: usuarioLogado != null ? const MenuView() : const TelaPrincipalView(),
     );
   }
 }

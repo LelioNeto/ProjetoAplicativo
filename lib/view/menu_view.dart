@@ -4,6 +4,7 @@ import 'tela_login_view.dart';
 import 'lista_de_produtos_view.dart';
 import 'receitas_view.dart';
 import 'perfil_view.dart';
+import 'tela_conversor_medidas_view.dart'; // import da nova tela
 
 class MenuView extends StatelessWidget {
   const MenuView({super.key});
@@ -16,38 +17,49 @@ class MenuView extends StatelessWidget {
     );
   }
 
-  void _abrirTela(BuildContext context, Widget tela) {
+  void _navegar(BuildContext context, Widget tela) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => tela),
     );
   }
 
-  Widget _botaoMenu(BuildContext context, IconData icone, String titulo, Widget tela) {
+  Widget _buildBotaoMenu({
+    required BuildContext context,
+    required IconData icone,
+    required String titulo,
+    required Widget telaDestino,
+  }) {
     return GestureDetector(
-      onTap: () => _abrirTela(context, tela),
+      onTap: () => _navegar(context, telaDestino),
       child: Container(
-        padding: const EdgeInsets.all(16),
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              blurRadius: 5,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
           children: [
             Icon(icone, color: Colors.white, size: 28),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Text(
               titulo,
-              style: const TextStyle(color: Colors.white, fontSize: 18),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+              ),
             ),
+            const Spacer(),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 20),
           ],
         ),
       ),
@@ -71,13 +83,36 @@ class MenuView extends StatelessWidget {
           onPressed: () => _logout(context),
         ),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 16),
-          _botaoMenu(context, Icons.list, "Lista de Compras", const TelaListaComprasView()),
-          _botaoMenu(context, Icons.fastfood, "Receitas", const TelaReceitasView()),
-          _botaoMenu(context, Icons.person, "Perfil", const TelaPerfilView()),
-        ],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 30),
+        child: Column(
+          children: [
+            _buildBotaoMenu(
+              context: context,
+              icone: Icons.list,
+              titulo: "Lista de Compras",
+              telaDestino: const TelaListaComprasView(),
+            ),
+            _buildBotaoMenu(
+              context: context,
+              icone: Icons.fastfood,
+              titulo: "Receitas",
+              telaDestino: const TelaReceitasView(),
+            ),
+            _buildBotaoMenu(
+              context: context,
+              icone: Icons.straighten, // ícone de régua/medidas
+              titulo: "Conversor de Medidas",
+              telaDestino: const TelaConversorMedidasView(),
+            ),
+            _buildBotaoMenu(
+              context: context,
+              icone: Icons.person,
+              titulo: "Perfil",
+              telaDestino: const TelaPerfilView(),
+            ),
+          ],
+        ),
       ),
     );
   }
