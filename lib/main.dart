@@ -3,7 +3,8 @@ import 'package:device_preview/device_preview.dart';
 import 'view/tela_principal_view.dart';
 import 'view/tela_login_view.dart';
 import 'view/tela_redefinir_senha_view.dart';
-import 'services/auth_service.dart'; // import do AuthService
+import 'view/menu_view.dart';       // import do MenuView
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,9 +34,10 @@ class MyApp extends StatelessWidget {
         '/redefinir-senha': (context) => const TelaRedefinirSenhaView(),
         '/login': (context) => const TelaLoginView(),
         '/principal': (context) => const TelaPrincipalView(),
+        '/menu': (context) => const MenuView(),
       },
-      // inicia no menu principal se já estiver logado, senão na tela de login
-      home: usuarioLogado != null ? const TelaPrincipalView() : const TelaLoginView(),
+      // Se já está logado → abre MenuView, senão → TelaPrincipalView
+      home: usuarioLogado != null ? const MenuView() : const TelaPrincipalView(),
     );
   }
 }
