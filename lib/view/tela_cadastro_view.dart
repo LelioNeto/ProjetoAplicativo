@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tela_login_view.dart';
+import '../services/auth_service.dart'; // Import do AuthService
 
 class TelaCadastroView extends StatefulWidget {
   const TelaCadastroView({super.key});
@@ -15,14 +16,19 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
   final TextEditingController confirmaSenhaController = TextEditingController();
   final TextEditingController telefoneController = TextEditingController();
 
-  void _realizarCadastro() {
+  // Função de cadastro atualizada
+  void _realizarCadastro() async {
     String nome = nomeController.text.trim();
     String email = emailController.text.trim();
     String senha = senhaController.text.trim();
     String confirmaSenha = confirmaSenhaController.text.trim();
     String telefone = telefoneController.text.trim();
 
-    if (nome.isEmpty || email.isEmpty || senha.isEmpty || confirmaSenha.isEmpty || telefone.isEmpty) {
+    if (nome.isEmpty ||
+        email.isEmpty ||
+        senha.isEmpty ||
+        confirmaSenha.isEmpty ||
+        telefone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor, preencha todos os campos.'),
@@ -33,9 +39,55 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
       return;
     }
 
-    // Aqui você pode adicionar outras validações, como e-mail válido ou senha igual
+    if (senha != confirmaSenha) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('As senhas não coincidem.'),
+          backgroundColor: Colors.orangeAccent,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
 
-    // Após validação, redireciona para login (ou salva no banco)
+    if (!email.contains('@') || !email.contains('.')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Digite um e-mail válido.'),
+          backgroundColor: Colors.orangeAccent,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final auth = AuthService();
+    bool sucesso = await auth.cadastrarUsuario(
+      nome: nome,
+      email: email,
+      senha: senha,
+      telefone: telefone,
+    );
+
+    if (!sucesso) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('E-mail já cadastrado.'),
+          backgroundColor: Colors.orangeAccent,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Cadastro realizado com sucesso!'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
+    );
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const TelaLoginView()),
@@ -53,7 +105,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
         labelText: label,
         hintText: hintText,
         filled: true,
-        fillColor: Colors.transparent, // transparente
+        fillColor: Colors.transparent,
         border: const OutlineInputBorder(),
         enabledBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: Colors.white10),
@@ -74,10 +126,15 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 15, 15, 15),
       appBar: AppBar(
-        title: const Text("Cadastro", style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
+        title: const Text(
+          "Cadastro",
+          style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+        ),
         backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Color.fromARGB(255, 255, 255, 255)),
+        iconTheme: const IconThemeData(
+          color: Color.fromARGB(255, 255, 255, 255),
+        ),
       ),
       body: Theme(
         data: Theme.of(context).copyWith(
@@ -93,8 +150,8 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
             children: [
               const SizedBox(height: 24),
               Image.asset('image/LogoChefList.png', height: 190),
-
               const SizedBox(height: 16),
+
               TextField(
                 controller: nomeController,
                 decoration: buildInputDecoration("Nome", Icons.person),
@@ -102,6 +159,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 16),
+
               TextField(
                 controller: emailController,
                 decoration: buildInputDecoration("Email", Icons.email),
@@ -109,6 +167,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 16),
+
               TextField(
                 controller: senhaController,
                 obscureText: true,
@@ -117,14 +176,17 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 16),
+
               TextField(
                 controller: confirmaSenhaController,
                 obscureText: true,
-                decoration: buildInputDecoration("Confirme sua Senha", Icons.lock),
+                decoration:
+                    buildInputDecoration("Confirme sua Senha", Icons.lock),
                 style: const TextStyle(color: Colors.white),
                 cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 16),
+
               TextField(
                 controller: telefoneController,
                 keyboardType: TextInputType.phone,
@@ -137,6 +199,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 24),
+
               ElevatedButton(
                 onPressed: _realizarCadastro,
                 style: ElevatedButton.styleFrom(
@@ -152,7 +215,8 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const TelaLoginView()),
+                    MaterialPageRoute(
+                        builder: (context) => const TelaLoginView()),
                   );
                 },
                 child: RichText(

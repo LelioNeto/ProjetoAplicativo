@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'tela_cadastro_view.dart';
+import 'menu_view.dart'; // substitui tela_principal_view.dart se for o menu principal
+import '../services/auth_service.dart';
 import 'tela_redefinir_senha_view.dart';
-import 'tela_principal_view.dart';
 
 class TelaLoginView extends StatefulWidget {
   const TelaLoginView({super.key});
@@ -14,7 +15,7 @@ class _TelaLoginViewState extends State<TelaLoginView> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController senhaController = TextEditingController();
 
-  void _realizarLogin() {
+  void _realizarLogin() async {
     String email = emailController.text.trim();
     String senha = senhaController.text.trim();
 
@@ -40,10 +41,31 @@ class _TelaLoginViewState extends State<TelaLoginView> {
       return;
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const TelaPrincipalView()),
-    );
+    final auth = AuthService();
+    bool logado = await auth.login(email, senha);
+
+    if (logado) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login realizado com sucesso!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MenuView()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('E-mail ou senha incorretos.'),
+          backgroundColor: Colors.redAccent,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -54,7 +76,7 @@ class _TelaLoginViewState extends State<TelaLoginView> {
         labelText: label,
         hintText: hintText,
         filled: true,
-        fillColor: Colors.transparent, // <-- transparente
+        fillColor: Colors.transparent,
         border: const OutlineInputBorder(),
         enabledBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: Colors.white10),
@@ -75,10 +97,15 @@ class _TelaLoginViewState extends State<TelaLoginView> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 15, 15, 15),
       appBar: AppBar(
-        title: const Text("Login", style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
+        title: const Text(
+          "Login",
+          style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+        ),
         backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Color.fromARGB(255, 255, 255, 255)),
+        iconTheme: const IconThemeData(
+          color: Color.fromARGB(255, 255, 255, 255),
+        ),
       ),
       body: Theme(
         data: Theme.of(context).copyWith(
@@ -139,7 +166,7 @@ class _TelaLoginViewState extends State<TelaLoginView> {
                   },
                   style: ButtonStyle(
                     overlayColor:
-                        MaterialStateProperty.all(Colors.transparent),
+                        WidgetStateProperty.all(Colors.transparent),
                   ),
                   child: const Text(
                     "Esqueci minha senha",
