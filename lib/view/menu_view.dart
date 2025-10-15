@@ -4,7 +4,8 @@ import 'tela_login_view.dart';
 import 'lista_de_produtos_view.dart';
 import 'receitas_view.dart';
 import 'perfil_view.dart';
-import 'tela_conversor_medidas_view.dart'; // import da nova tela
+import 'tela_conversor_medidas_view.dart';
+import 'sobre_view.dart'; // import da nova tela "Sobre"
 
 class MenuView extends StatelessWidget {
   const MenuView({super.key});
@@ -82,6 +83,22 @@ class MenuView extends StatelessWidget {
           tooltip: "Sair",
           onPressed: () => _logout(context),
         ),
+        actions: [
+          IconButton(
+            tooltip: "Sobre",
+            onPressed: () {
+              _navegar(context, const SobreView());
+            },
+            icon: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              padding: const EdgeInsets.all(4),
+              child: const Icon(Icons.question_mark, color: Colors.white, size: 20),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 30),
@@ -101,7 +118,7 @@ class MenuView extends StatelessWidget {
             ),
             _buildBotaoMenu(
               context: context,
-              icone: Icons.straighten, // ícone de régua/medidas
+              icone: Icons.straighten,
               titulo: "Conversor de Medidas",
               telaDestino: const TelaConversorMedidasView(),
             ),

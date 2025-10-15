@@ -64,7 +64,7 @@ class _TelaPerfilViewState extends State<TelaPerfilView> {
             const SizedBox(height: 40),
 
             /// --- SEÇÃO SOBRE O APLICATIVO ---
-            const Align(
+            /*const Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Sobre',
@@ -87,7 +87,7 @@ class _TelaPerfilViewState extends State<TelaPerfilView> {
                 'Este aplicativo foi desenvolvido para gerenciar receitas, lista de compras e outras funcionalidades de culinária de forma prática e intuitiva.',
                 style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
-            ),
+            ),*/
           ],
         ),
       ),

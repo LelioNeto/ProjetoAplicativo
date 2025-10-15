@@ -232,7 +232,7 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
         title: const Text('Receitas'),
         backgroundColor: const Color(0xFF1A1A1A),
