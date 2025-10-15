@@ -4,6 +4,7 @@ import 'dart:convert';
 class AuthService {
   static const String _usuariosKey = 'usuarios';
   static const String _usuarioLogadoKey = 'usuarioLogado';
+  static const String _usuarioLogadoNomeKey = 'usuarioLogadoNome';
 
   // Salva novo usuário
   Future<bool> cadastrarUsuario({
@@ -16,13 +17,15 @@ class AuthService {
 
     List<String> usuarios = prefs.getStringList(_usuariosKey) ?? [];
 
+    // Verifica se o e-mail já existe
     for (var user in usuarios) {
       Map<String, dynamic> data = json.decode(user);
       if (data['email'] == email) {
-        return false; // email já cadastrado
+        return false; // e-mail já cadastrado
       }
     }
 
+    // Cria o novo usuário
     Map<String, dynamic> novoUsuario = {
       'nome': nome,
       'email': email,
@@ -43,26 +46,35 @@ class AuthService {
     for (var user in usuarios) {
       Map<String, dynamic> data = json.decode(user);
       if (data['email'] == email && data['senha'] == senha) {
+        // Salva email e nome do usuário logado
         await prefs.setString(_usuarioLogadoKey, email);
+        await prefs.setString(_usuarioLogadoNomeKey, data['nome']);
         return true;
       }
     }
     return false;
   }
 
-  // Verifica se há login salvo
+  // Retorna o e-mail do usuário logado
   Future<String?> usuarioLogado() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_usuarioLogadoKey);
+  }
+
+  // Retorna o nome do usuário logado
+  Future<String?> nomeUsuarioLogado() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_usuarioLogadoNomeKey);
   }
 
   // Logout
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_usuarioLogadoKey);
+    await prefs.remove(_usuarioLogadoNomeKey);
   }
 
-  // 🔑 Redefinir senha
+  // Redefinir senha
   Future<bool> redefinirSenha(String email, String novaSenha) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> usuarios = prefs.getStringList(_usuariosKey) ?? [];
