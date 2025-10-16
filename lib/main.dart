@@ -11,6 +11,7 @@ import 'view/lista_de_produtos_view.dart';
 import 'view/receitas_view.dart';
 import 'view/perfil_view.dart';
 import 'view/tela_conversor_medidas_view.dart';
+import 'view/cronometro_view.dart'; //
 
 import 'services/auth_service.dart'; // serviço de autenticação
 
@@ -47,17 +48,18 @@ class MyApp extends StatelessWidget {
           titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
         ),
       ),
-      initialRoute: '/principal', // 🔹 inicia pela tela principal
+      initialRoute: '/principal',
       routes: {
         '/principal': (context) => const TelaPrincipalView(),
         '/login': (context) => const TelaLoginView(),
         '/cadastro': (context) => const TelaCadastroView(),
         '/redefinir-senha': (context) => const TelaRedefinirSenhaView(),
         '/menu': (context) => const MenuView(),
-        '/lista-compras': (context) => const TelaListaComprasView(),
+        '/lista-compras': (context) => const ListaDeProdutosView(),
         '/receitas': (context) => const TelaReceitasView(),
         '/perfil': (context) => const TelaPerfilView(),
         '/conversor-medidas': (context) => const TelaConversorMedidasView(),
+        '/cronometro': (context) => const CronometroView(),
       },
     );
   }

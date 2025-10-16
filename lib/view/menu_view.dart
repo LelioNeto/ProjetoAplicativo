@@ -6,6 +6,7 @@ import 'receitas_view.dart';
 import 'perfil_view.dart';
 import 'tela_conversor_medidas_view.dart';
 import 'sobre_view.dart'; // import da nova tela "Sobre"
+import 'cronometro_view.dart';
 
 class MenuView extends StatelessWidget {
   const MenuView({super.key});
@@ -19,10 +20,7 @@ class MenuView extends StatelessWidget {
   }
 
   void _navegar(BuildContext context, Widget tela) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => tela),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) => tela));
   }
 
   Widget _buildBotaoMenu({
@@ -60,7 +58,11 @@ class MenuView extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 20),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white70,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -72,10 +74,7 @@ class MenuView extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
-        title: const Text(
-          "Menu",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("Menu", style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1A1A1A),
         iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
@@ -95,7 +94,11 @@ class MenuView extends StatelessWidget {
                 border: Border.all(color: Colors.white, width: 2),
               ),
               padding: const EdgeInsets.all(4),
-              child: const Icon(Icons.question_mark, color: Colors.white, size: 20),
+              child: const Icon(
+                Icons.question_mark,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -108,7 +111,7 @@ class MenuView extends StatelessWidget {
               context: context,
               icone: Icons.list,
               titulo: "Lista de Compras",
-              telaDestino: const TelaListaComprasView(),
+              telaDestino: const ListaDeProdutosView(),
             ),
             _buildBotaoMenu(
               context: context,
@@ -121,6 +124,13 @@ class MenuView extends StatelessWidget {
               icone: Icons.straighten,
               titulo: "Conversor de Medidas",
               telaDestino: const TelaConversorMedidasView(),
+            ),
+            // ✅ novo botão: Cronômetro
+            _buildBotaoMenu(
+              context: context,
+              icone: Icons.timer,
+              titulo: "Cronômetro",
+              telaDestino: const CronometroView(),
             ),
             _buildBotaoMenu(
               context: context,

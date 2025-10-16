@@ -4,7 +4,8 @@ class TelaConversorMedidasView extends StatefulWidget {
   const TelaConversorMedidasView({super.key});
 
   @override
-  State<TelaConversorMedidasView> createState() => _TelaConversorMedidasViewState();
+  State<TelaConversorMedidasView> createState() =>
+      _TelaConversorMedidasViewState();
 }
 
 class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
@@ -13,7 +14,7 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
   String unidadeDestino = 'Mililitros';
   double resultado = 0.0;
 
-  final Map<String, double> fatoresConversao = {
+  final Map<String, double> fatoresConversao = const {
     'Xícaras': 240.0,
     'Colheres de sopa': 15.0,
     'Colheres de chá': 5.0,
@@ -21,20 +22,16 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
   };
 
   void converter() {
-    final valor = double.tryParse(valorController.text);
+    final valor = double.tryParse(valorController.text.replaceAll(',', '.'));
     if (valor == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Insira um valor válido!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Insira um valor válido!')));
       return;
     }
-
     final valorEmMl = valor * fatoresConversao[unidadeOrigem]!;
     final convertido = valorEmMl / fatoresConversao[unidadeDestino]!;
-
-    setState(() {
-      resultado = convertido;
-    });
+    setState(() => resultado = convertido);
   }
 
   @override
@@ -47,7 +44,7 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView( // 👈 evita overflow na vertical
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -61,9 +58,13 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // Campo de valor (sem prefixIcon)
             TextField(
               controller: valorController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: InputDecoration(
                 labelText: 'Valor',
                 labelStyle: const TextStyle(color: Colors.white),
@@ -72,27 +73,28 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
                 ),
                 filled: true,
                 fillColor: Colors.grey[850],
-                prefixIcon: const Icon(Icons.numbers, color: Colors.white70),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
               ),
               style: const TextStyle(color: Colors.white),
             ),
+
             const SizedBox(height: 16),
 
-            /// Corrigido aqui 👇
-            Wrap(
-              spacing: 16,
-              runSpacing: 8, // permite quebrar linha se faltar espaço
+            // ✅ Dois dropdowns lado a lado sem overflow
+            Row(
               children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width / 2 - 24,
+                Expanded(
                   child: _buildDropdown(
                     'De',
                     unidadeOrigem,
                     (val) => setState(() => unidadeOrigem = val!),
                   ),
                 ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width / 2 - 24,
+                const SizedBox(width: 16),
+                Expanded(
                   child: _buildDropdown(
                     'Para',
                     unidadeDestino,
@@ -118,6 +120,7 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
+
             const SizedBox(height: 24),
             if (resultado != 0)
               Container(
@@ -149,18 +152,26 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
     );
   }
 
-  Widget _buildDropdown(String label, String value, ValueChanged<String?> onChanged) {
+  Widget _buildDropdown(
+    String label,
+    String value,
+    ValueChanged<String?> onChanged,
+  ) {
     return DropdownButtonFormField<String>(
       value: value,
+      isExpanded: true, // evita overflow interno
       dropdownColor: Colors.grey[900],
       items: fatoresConversao.keys
-          .map((unidade) => DropdownMenuItem(
-                value: unidade,
-                child: Text(
-                  unidade,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ))
+          .map(
+            (unidade) => DropdownMenuItem(
+              value: unidade,
+              child: Text(
+                unidade,
+                overflow: TextOverflow.ellipsis, // segurança extra
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          )
           .toList(),
       onChanged: onChanged,
       decoration: InputDecoration(
@@ -169,6 +180,10 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         filled: true,
         fillColor: Colors.grey[850],
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
+        ),
       ),
     );
   }
