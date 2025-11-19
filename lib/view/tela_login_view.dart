@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tela_cadastro_view.dart';
-import 'menu_view.dart'; // substitui tela_principal_view.dart se for o menu principal
+import 'menu_view.dart';
 import '../services/auth_service.dart';
 import 'tela_redefinir_senha_view.dart';
 
@@ -70,8 +70,11 @@ class _TelaLoginViewState extends State<TelaLoginView> {
 
   @override
   Widget build(BuildContext context) {
-    InputDecoration buildInputDecoration(String label, IconData icon,
-        {String? hintText}) {
+    InputDecoration buildInputDecoration(
+      String label,
+      IconData icon, {
+      String? hintText,
+    }) {
       return InputDecoration(
         labelText: label,
         hintText: hintText,
@@ -99,12 +102,12 @@ class _TelaLoginViewState extends State<TelaLoginView> {
       appBar: AppBar(
         title: const Text(
           "Login",
-          style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+          style: TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(
-          color: Color.fromARGB(255, 255, 255, 255),
+          color: Colors.white,
         ),
       ),
       body: Theme(
@@ -164,10 +167,6 @@ class _TelaLoginViewState extends State<TelaLoginView> {
                       ),
                     );
                   },
-                  style: ButtonStyle(
-                    overlayColor:
-                        WidgetStateProperty.all(Colors.transparent),
-                  ),
                   child: const Text(
                     "Esqueci minha senha",
                     style: TextStyle(

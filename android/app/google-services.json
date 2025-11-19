@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "25026313145",
+    "project_id": "projetoplotze-392ef",
+    "storage_bucket": "projetoplotze-392ef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:25026313145:android:ffd21ebd093d44c6105468",
+        "android_client_info": {
+          "package_name": "com.example.app_exemplo_firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpDKl_PPrUEkmLZn0WHSTAi3bJZ2Hdyzo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:25026313145:android:c743c5d07642bcee105468",
+        "android_client_info": {
+          "package_name": "com.example.projeto_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpDKl_PPrUEkmLZn0WHSTAi3bJZ2Hdyzo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

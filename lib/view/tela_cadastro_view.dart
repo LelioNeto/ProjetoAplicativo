@@ -16,7 +16,6 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
   final TextEditingController confirmaSenhaController = TextEditingController();
   final TextEditingController telefoneController = TextEditingController();
 
-  // Função de cadastro atualizada
   void _realizarCadastro() async {
     String nome = nomeController.text.trim();
     String email = emailController.text.trim();
@@ -24,6 +23,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
     String confirmaSenha = confirmaSenhaController.text.trim();
     String telefone = telefoneController.text.trim();
 
+    // --- Validações Básicas ---
     if (nome.isEmpty ||
         email.isEmpty ||
         senha.isEmpty ||
@@ -33,18 +33,6 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
         const SnackBar(
           content: Text('Por favor, preencha todos os campos.'),
           backgroundColor: Colors.redAccent,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    if (senha != confirmaSenha) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('As senhas não coincidem.'),
-          backgroundColor: Colors.orangeAccent,
-          duration: Duration(seconds: 2),
         ),
       );
       return;
@@ -55,12 +43,42 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
         const SnackBar(
           content: Text('Digite um e-mail válido.'),
           backgroundColor: Colors.orangeAccent,
-          duration: Duration(seconds: 2),
         ),
       );
       return;
     }
 
+    if (senha != confirmaSenha) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('As senhas não coincidem.'),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
+      return;
+    }
+
+    // --- Validações de segurança exigidas no PDF ---
+    bool senhaValida =
+        senha.length >= 6 &&
+        senha.contains(RegExp(r'[A-Z]')) &&
+        senha.contains(RegExp(r'[a-z]')) &&
+        senha.contains(RegExp(r'[0-9]')) &&
+        senha.contains(RegExp(r'[!@#\$&*~%]'));
+
+    if (!senhaValida) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'A senha deve conter ao menos:\n- 6 caracteres\n- Letra maiúscula\n- Letra minúscula\n- Número\n- Caracter especial (!@#\$&*~%)'),
+          backgroundColor: Colors.orangeAccent,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    // --- Chamar o Firebase pelo AuthService ---
     final auth = AuthService();
     bool sucesso = await auth.cadastrarUsuario(
       nome: nome,
@@ -72,19 +90,18 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
     if (!sucesso) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('E-mail já cadastrado.'),
+          content: Text("Este e-mail já está cadastrado."),
           backgroundColor: Colors.orangeAccent,
-          duration: Duration(seconds: 2),
         ),
       );
       return;
     }
 
+    // --- Sucesso ---
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Cadastro realizado com sucesso!'),
+        content: Text("Cadastro realizado com sucesso!"),
         backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
       ),
     );
 
@@ -128,13 +145,11 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
       appBar: AppBar(
         title: const Text(
           "Cadastro",
-          style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+          style: TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(
-          color: Color.fromARGB(255, 255, 255, 255),
-        ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Theme(
         data: Theme.of(context).copyWith(
@@ -156,7 +171,6 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 controller: nomeController,
                 decoration: buildInputDecoration("Nome", Icons.person),
                 style: const TextStyle(color: Colors.white),
-                cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 16),
 
@@ -164,7 +178,6 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 controller: emailController,
                 decoration: buildInputDecoration("Email", Icons.email),
                 style: const TextStyle(color: Colors.white),
-                cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 16),
 
@@ -173,17 +186,17 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 obscureText: true,
                 decoration: buildInputDecoration("Senha", Icons.lock),
                 style: const TextStyle(color: Colors.white),
-                cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 16),
 
               TextField(
                 controller: confirmaSenhaController,
                 obscureText: true,
-                decoration:
-                    buildInputDecoration("Confirme sua Senha", Icons.lock),
+                decoration: buildInputDecoration(
+                  "Confirme sua Senha",
+                  Icons.lock,
+                ),
                 style: const TextStyle(color: Colors.white),
-                cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 16),
 
@@ -196,7 +209,6 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                   hintText: "(99) 99999-9999",
                 ),
                 style: const TextStyle(color: Colors.white),
-                cursorColor: const Color.fromARGB(255, 150, 54, 54),
               ),
               const SizedBox(height: 24),
 

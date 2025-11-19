@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import 'firebase_options.dart';
 
 // Import das views
 import 'view/tela_principal_view.dart';
@@ -11,20 +14,25 @@ import 'view/lista_de_produtos_view.dart';
 import 'view/receitas_view.dart';
 import 'view/perfil_view.dart';
 import 'view/tela_conversor_medidas_view.dart';
-import 'view/cronometro_view.dart'; //
+import 'view/cronometro_view.dart';
 
-import 'services/auth_service.dart'; // serviço de autenticação
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Verifica se há usuário logado (para controle de sessão)
+  // Inicializar Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Verificar usuário logado
   final auth = AuthService();
   final usuario = await auth.usuarioLogado();
 
   runApp(
     DevicePreview(
-      enabled: true, // permite simular diferentes tamanhos de tela
+      enabled: true,
       builder: (context) => MyApp(usuarioLogado: usuario),
     ),
   );
@@ -48,7 +56,10 @@ class MyApp extends StatelessWidget {
           titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
         ),
       ),
-      initialRoute: '/principal',
+
+      // Agora verifica se há usuário autenticado
+      initialRoute: usuarioLogado != null ? '/menu' : '/principal',
+
       routes: {
         '/principal': (context) => const TelaPrincipalView(),
         '/login': (context) => const TelaLoginView(),

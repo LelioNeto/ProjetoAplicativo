@@ -12,14 +12,10 @@ class TelaRedefinirSenhaView extends StatefulWidget {
 class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
-  final _novaSenhaCtrl = TextEditingController();
-  final _confirmaSenhaCtrl = TextEditingController();
 
   @override
   void dispose() {
     _emailCtrl.dispose();
-    _novaSenhaCtrl.dispose();
-    _confirmaSenhaCtrl.dispose();
     super.dispose();
   }
 
@@ -44,48 +40,47 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
 
   void _redefinirSenha() async {
     String email = _emailCtrl.text.trim();
-    String novaSenha = _novaSenhaCtrl.text.trim();
-    String confirmaSenha = _confirmaSenhaCtrl.text.trim();
 
-    if (email.isEmpty || novaSenha.isEmpty || confirmaSenha.isEmpty) {
+    if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Preencha todos os campos'),
+          content: Text('Preencha o e-mail'),
           backgroundColor: Colors.redAccent,
         ),
       );
       return;
     }
 
-    if (novaSenha != confirmaSenha) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('As senhas não coincidem'),
-          backgroundColor: Colors.orangeAccent,
-        ),
-      );
-      return;
-    }
+    try {
+      final auth = AuthService();
+      bool enviado = await auth.redefinirSenha(email);
 
-    final auth = AuthService();
-    bool sucesso = await auth.redefinirSenha(email, novaSenha);
+      if (enviado) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('E-mail de recuperação enviado! Verifique sua caixa de entrada.'),
+            backgroundColor: Colors.green,
+          ),
+        );
 
-    if (sucesso) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const TelaLoginView()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('E-mail não encontrado ou inválido.'),
+            backgroundColor: Colors.orangeAccent,
+          ),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Senha redefinida com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const TelaLoginView()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('E-mail não encontrado'),
-          backgroundColor: Colors.orangeAccent,
+        SnackBar(
+          content: Text('Erro ao enviar redefinição: $e'),
+          backgroundColor: Colors.redAccent,
         ),
       );
     }
@@ -123,7 +118,7 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
                   const SizedBox(height: 24),
 
                   const Text(
-                    'Informe o e-mail e a nova senha para redefinir.',
+                    'Digite o e-mail para receber um link de redefinição de senha.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
@@ -147,36 +142,6 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
                               ? 'Informe seu e-mail'
                               : null,
                         ),
-                        const SizedBox(height: 16),
-
-                        // Nova senha
-                        TextFormField(
-                          controller: _novaSenhaCtrl,
-                          obscureText: true,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: _inputDeco(
-                            hint: 'Nova senha',
-                            icon: Icons.lock_outline,
-                          ),
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Informe a nova senha'
-                              : null,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Confirmar senha
-                        TextFormField(
-                          controller: _confirmaSenhaCtrl,
-                          obscureText: true,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: _inputDeco(
-                            hint: 'Confirmar senha',
-                            icon: Icons.lock_outline,
-                          ),
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Confirme a senha'
-                              : null,
-                        ),
                         const SizedBox(height: 24),
 
                         // Botão redefinir
@@ -197,7 +162,7 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
                               }
                             },
                             child: const Text(
-                              'Redefinir senha',
+                              'Enviar e-mail de redefinição',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: .2,
