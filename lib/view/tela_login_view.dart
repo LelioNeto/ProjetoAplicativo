@@ -14,58 +14,55 @@ class TelaLoginView extends StatefulWidget {
 class _TelaLoginViewState extends State<TelaLoginView> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController senhaController = TextEditingController();
+  bool carregando = false;
 
+  // ==========================================================
+  //   AJUSTADO PARA FUNCIONAR COM O NOVO AuthService
+  // ==========================================================
   void _realizarLogin() async {
     String email = emailController.text.trim();
     String senha = senhaController.text.trim();
 
     if (email.isEmpty || senha.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, preencha todos os campos.'),
-          backgroundColor: Colors.redAccent,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      _mostrarMsg('Por favor, preencha todos os campos.', Colors.redAccent);
       return;
     }
 
     if (!email.contains('@') || !email.contains('.')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Digite um e-mail válido.'),
-          backgroundColor: Colors.orangeAccent,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      _mostrarMsg('Digite um e-mail válido.', Colors.orangeAccent);
       return;
     }
 
-    final auth = AuthService();
-    bool logado = await auth.login(email, senha);
+    setState(() => carregando = true);
 
-    if (logado) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login realizado com sucesso!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+    final auth = AuthService();
+    String? erro = await auth.login(email, senha); // mudou aqui
+
+    setState(() => carregando = false);
+
+    if (erro == null) {
+      // SUCESSO
+      _mostrarMsg('Login realizado com sucesso!', Colors.green);
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MenuView()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('E-mail ou senha incorretos.'),
-          backgroundColor: Colors.redAccent,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      // FALHA
+      _mostrarMsg(erro, Colors.redAccent);
     }
+  }
+
+  // ==========================================================
+  void _mostrarMsg(String msg, Color cor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: cor,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -106,9 +103,7 @@ class _TelaLoginViewState extends State<TelaLoginView> {
         ),
         backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(
-          color: Colors.white,
-        ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Theme(
         data: Theme.of(context).copyWith(
@@ -145,33 +140,32 @@ class _TelaLoginViewState extends State<TelaLoginView> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _realizarLogin,
+                  onPressed: carregando ? null : _realizarLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text("Entrar"),
+                  child: carregando
+                      ? const CircularProgressIndicator(color: Colors.black)
+                      : const Text("Entrar"),
                 ),
               ),
               const SizedBox(height: 16),
 
-              Align(
-                alignment: Alignment.center,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TelaRedefinirSenhaView(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Esqueci minha senha",
-                    style: TextStyle(
-                      color: Color.fromARGB(255, 150, 54, 54),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TelaRedefinirSenhaView(),
                     ),
+                  );
+                },
+                child: const Text(
+                  "Esqueci minha senha",
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 150, 54, 54),
                   ),
                 ),
               ),

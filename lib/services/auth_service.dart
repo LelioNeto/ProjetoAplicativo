@@ -5,97 +5,127 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ===============================
-  // CADASTRAR NOVO USUÁRIO
-  // ===============================
-
-  Future<bool> cadastrarUsuario({
+  // ============================================================
+  // CADASTRO DE NOVO USUÁRIO
+  // ============================================================
+  Future<String?> cadastrarUsuario({
     required String nome,
     required String email,
     required String senha,
     required String telefone,
   }) async {
     try {
-      // Cria usuário no Firebase Auth
+      // Regras básicas de validação
+      if (senha.length < 6) {
+        return "A senha deve ter pelo menos 6 caracteres.";
+      }
+
+      // Criar usuário no Auth
       UserCredential cred = await _auth.createUserWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: senha,
       );
 
-      // Cria documento no Firestore (coleção "usuarios")
-      await _firestore.collection("usuarios").doc(cred.user!.uid).set({
-        "nome": nome,
-        "email": email,
-        "telefone": telefone,
-        "id": cred.user!.uid,
-        "createdAt": DateTime.now(),
+      final uid = cred.user!.uid;
+
+      // Salvar no Firestore
+      await _firestore.collection("usuarios").doc(uid).set({
+        "id": uid,
+        "nome": nome.trim(),
+        "email": email.trim(),
+        "telefone": telefone.trim(),
+        "createdAt": FieldValue.serverTimestamp(),
       });
 
-      return true;
+      return null; // Sucesso (null = sem erro)
+    } on FirebaseAuthException catch (e) {
+      return _traduzErroAuth(e);
     } catch (e) {
-      print("Erro ao cadastrar usuário: $e");
-      return false;
+      return "Erro inesperado: $e";
     }
   }
 
-  // ===============================
+  // ============================================================
   // LOGIN
-  // ===============================
-
-  Future<bool> login(String email, String senha) async {
+  // ============================================================
+  Future<String?> login(String email, String senha) async {
     try {
       await _auth.signInWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: senha,
       );
-      return true;
+      return null;
     } on FirebaseAuthException catch (e) {
-      print("Erro no login: ${e.code} - ${e.message}");
-      return false;
+      return _traduzErroAuth(e);
+    } catch (e) {
+      return "Erro inesperado: $e";
     }
   }
 
-  // ===============================
-  // RETORNAR EMAIL DO USUÁRIO LOGADO
-  // ===============================
-
+  // ============================================================
+  // VERIFICAR USUÁRIO LOGADO
+  // ============================================================
   Future<String?> usuarioLogado() async {
-    return _auth.currentUser?.email;
+    return _auth.currentUser?.uid;
   }
 
-  // ===============================
-  // RETORNAR NOME DO USUÁRIO LOGADO
-  // ===============================
-
+  // ============================================================
+  // PEGAR NOME DO USUÁRIO LOGADO
+  // ============================================================
   Future<String?> nomeUsuarioLogado() async {
     final uid = _auth.currentUser?.uid;
-
     if (uid == null) return null;
 
-    final doc = await _firestore.collection("usuarios").doc(uid).get();
-
-    return doc.data()?["nome"];
+    try {
+      final doc = await _firestore.collection("usuarios").doc(uid).get();
+      return doc.data()?["nome"];
+    } catch (_) {
+      return null;
+    }
   }
 
-  // ===============================
+  // ============================================================
   // LOGOUT
-  // ===============================
-
+  // ============================================================
   Future<void> logout() async {
     await _auth.signOut();
   }
 
-  // ===============================
-  // REDEFINIR SENHA
-  // ===============================
-
-  Future<bool> redefinirSenha(String email) async {
+  // ============================================================
+  // REDEFINIÇÃO DE SENHA
+  // ============================================================
+  Future<String?> redefinirSenha(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
-      return true;
+      await _auth.sendPasswordResetEmail(email: email.trim());
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _traduzErroAuth(e);
     } catch (e) {
-      print("Erro ao redefinir senha: $e");
-      return false;
+      return "Erro inesperado: $e";
+    }
+  }
+
+  // ============================================================
+  // TRADUTOR DE ERROS DO FIREBASE (em português)
+  // ============================================================
+  String _traduzErroAuth(FirebaseAuthException e) {
+    switch (e.code) {
+      case "invalid-email":
+        return "O e-mail informado é inválido.";
+      case "user-disabled":
+        return "Este usuário foi desativado.";
+      case "user-not-found":
+        return "Usuário não encontrado.";
+      case "wrong-password":
+        return "Senha incorreta.";
+      case "email-already-in-use":
+        return "Este e-mail já está cadastrado.";
+      case "weak-password":
+        return "A senha é muito fraca.";
+      case "operation-not-allowed":
+        return "Operação não permitida.";
+      default:
+        return "Erro inesperado: ${e.message}";
     }
   }
 }

@@ -38,6 +38,9 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
     );
   }
 
+  // =====================================================
+  // AJUSTADO PARA FUNCIONAR COM O NOVO AUTHSERVICE
+  // =====================================================
   void _redefinirSenha() async {
     String email = _emailCtrl.text.trim();
 
@@ -51,36 +54,30 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
       return;
     }
 
-    try {
-      final auth = AuthService();
-      bool enviado = await auth.redefinirSenha(email);
+    final auth = AuthService();
+    String? erro = await auth.redefinirSenha(email); // mudou aqui
 
-      if (enviado) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('E-mail de recuperação enviado! Verifique sua caixa de entrada.'),
-            backgroundColor: Colors.green,
+    if (erro == null) {
+      // SUCESSO
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'E-mail de recuperação enviado! Verifique sua caixa de entrada.',
           ),
-        );
+          backgroundColor: Colors.green,
+        ),
+      );
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const TelaLoginView()),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('E-mail não encontrado ou inválido.'),
-            backgroundColor: Colors.orangeAccent,
-          ),
-        );
-      }
-    } catch (e) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const TelaLoginView()),
+      );
+    } else {
+      // FALHA
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro ao enviar redefinição: $e'),
-          backgroundColor: Colors.redAccent,
+          content: Text(erro),
+          backgroundColor: Colors.orangeAccent,
         ),
       );
     }

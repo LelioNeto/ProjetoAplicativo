@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'favoritos_view.dart';
 
 class Receita {
   String nome;
-  Map<String, String> ingredientes; // ingrediente: quantidade
+  Map<String, String> ingredientes;
   bool favorito;
 
-  Receita({required this.nome, required this.ingredientes, this.favorito = false});
+  Receita({
+    required this.nome,
+    required this.ingredientes,
+    this.favorito = false,
+  });
 
   Map<String, dynamic> toJson() {
     return {
@@ -23,7 +27,7 @@ class Receita {
     return Receita(
       nome: json['nome'],
       ingredientes: ing.map((key, value) => MapEntry(key, value.toString())),
-      favorito: json['favorito'] ?? false, // ✅ evita erro de tipo nulo
+      favorito: json['favorito'] ?? false,
     );
   }
 }
@@ -36,39 +40,42 @@ class TelaReceitasView extends StatefulWidget {
 }
 
 class _TelaReceitasViewState extends State<TelaReceitasView> {
-  List<Receita> receitas = [];
   bool modoEdicao = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _carregarReceitas();
+  final user = FirebaseAuth.instance.currentUser;
+
+  CollectionReference get _receitasRef => FirebaseFirestore.instance
+      .collection("usuarios")
+      .doc(user!.uid)
+      .collection("receitas");
+
+  Future<void> adicionarReceita(Receita r) async {
+    await _receitasRef.add(r.toJson());
   }
 
-  Future<void> _carregarReceitas() async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> dados = prefs.getStringList('receitas') ?? [];
-    setState(() {
-      receitas = dados.map((e) => Receita.fromJson(json.decode(e))).toList();
-    });
+  Future<void> atualizarReceita(String id, Receita r) async {
+    await _receitasRef.doc(id).update(r.toJson());
   }
 
-  Future<void> _salvarReceitas() async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> dados = receitas.map((r) => json.encode(r.toJson())).toList();
-    await prefs.setStringList('receitas', dados);
+  Future<void> excluirReceita(String id) async {
+    await _receitasRef.doc(id).delete();
   }
 
-  void _adicionarOuEditarReceita({Receita? receita, int? index}) {
+  void _adicionarOuEditarReceita({Receita? receita, String? id}) {
     final nomeCtrl = TextEditingController(text: receita?.nome ?? '');
-    List<MapEntry<TextEditingController, TextEditingController>> ingredientesCtrl = [];
+
+    List<MapEntry<TextEditingController, TextEditingController>>
+        ingredientesCtrl = [];
 
     if (receita != null) {
       receita.ingredientes.forEach((key, value) {
-        ingredientesCtrl.add(MapEntry(TextEditingController(text: key), TextEditingController(text: value)));
+        ingredientesCtrl.add(MapEntry(
+            TextEditingController(text: key),
+            TextEditingController(text: value)));
       });
     } else {
-      ingredientesCtrl.add(MapEntry(TextEditingController(), TextEditingController()));
+      ingredientesCtrl.add(
+          MapEntry(TextEditingController(), TextEditingController()));
     }
 
     bool favorito = receita?.favorito ?? false;
@@ -106,6 +113,7 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                 const SizedBox(height: 10),
                 const Text('Ingredientes', style: TextStyle(color: Colors.white70)),
                 const SizedBox(height: 5),
+
                 ...ingredientesCtrl.asMap().entries.map((entry) {
                   int idx = entry.key;
                   var controllers = entry.value;
@@ -146,64 +154,69 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                               ingredientesCtrl.removeAt(idx);
                             });
                           },
-                          icon: const Icon(Icons.remove_circle, color: Colors.redAccent),
+                          icon: const Icon(Icons.remove_circle,
+                              color: Colors.redAccent),
                         ),
                       ],
                     ),
                   );
                 }),
+
                 TextButton.icon(
                   onPressed: () {
                     setModalState(() {
-                      ingredientesCtrl.add(MapEntry(TextEditingController(), TextEditingController()));
+                      ingredientesCtrl.add(MapEntry(
+                          TextEditingController(), TextEditingController()));
                     });
                   },
                   icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text('Adicionar Ingrediente', style: TextStyle(color: Colors.white)),
+                  label: const Text('Adicionar Ingrediente',
+                      style: TextStyle(color: Colors.white)),
                 ),
+
                 Row(
                   children: [
                     const Text('Favoritar: ', style: TextStyle(color: Colors.white)),
                     Switch(
                       value: favorito,
                       onChanged: (v) {
-                        setModalState(() {
-                          favorito = v;
-                        });
+                        setModalState(() => favorito = v);
                       },
                       activeColor: Colors.amber,
                     ),
                   ],
                 ),
+
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Map<String, String> mapIng = {};
                     for (var c in ingredientesCtrl) {
                       if (c.key.text.isNotEmpty && c.value.text.isNotEmpty) {
                         mapIng[c.key.text.trim()] = c.value.text.trim();
                       }
                     }
+
                     final nova = Receita(
                       nome: nomeCtrl.text.trim(),
                       ingredientes: mapIng,
                       favorito: favorito,
                     );
-                    setState(() {
-                      if (index != null) {
-                        receitas[index] = nova;
-                      } else {
-                        receitas.add(nova);
-                      }
-                    });
-                    _salvarReceitas();
+
+                    if (id != null) {
+                      await atualizarReceita(id, nova);
+                    } else {
+                      await adicionarReceita(nova);
+                    }
+
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
                   child: Text(
-                    index != null ? 'Editar Receita' : 'Adicionar Receita',
+                    id != null ? 'Editar Receita' : 'Adicionar Receita',
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
+
                 const SizedBox(height: 20),
               ],
             ),
@@ -213,20 +226,13 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
     );
   }
 
-  void _abrirFavoritos() {
+  void _abrirFavoritos(List<Receita> receitas) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FavoritosView(receitas: receitas.where((r) => r.favorito).toList()),
+        builder: (context) => FavoritosView(receitas: receitas),
       ),
     );
-  }
-
-  void _excluirReceita(int index) {
-    setState(() {
-      receitas.removeAt(index);
-    });
-    _salvarReceitas();
   }
 
   @override
@@ -240,9 +246,7 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
         actions: [
           TextButton(
             onPressed: () {
-              setState(() {
-                modoEdicao = !modoEdicao;
-              });
+              setState(() => modoEdicao = !modoEdicao);
             },
             child: Text(
               modoEdicao ? 'Cancelar' : 'Editar',
@@ -251,104 +255,140 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: GridView.builder(
-          itemCount: receitas.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 1.10, // 🔹 ajustado para deixar mais quadrado
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-          ),
-          itemBuilder: (context, index) {
-            final receita = receitas[index];
-            return Stack(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A2A2A),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        receita.nome,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 5),
-                      Expanded(
-                        child: ListView(
-                          children: receita.ingredientes.entries
-                              .map((e) => Text(
-                                    '${e.key}: ${e.value}',
-                                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                                  ))
-                              .toList(),
-                        ),
-                      ),
-                      if (receita.favorito)
-                        const Align(
-                          alignment: Alignment.bottomRight,
-                          child: Icon(Icons.star, color: Colors.amber),
-                        ),
-                    ],
-                  ),
-                ),
-                if (modoEdicao)
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Row(
+
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _receitasRef.snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final docs = snapshot.data!.docs;
+          List<Receita> listaFavoritos = [];
+
+          return GridView.builder(
+            itemCount: docs.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1.10,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemBuilder: (context, index) {
+              final doc = docs[index];
+              final receita = Receita.fromJson(doc.data() as Map<String, dynamic>);
+
+              if (receita.favorito) listaFavoritos.add(receita);
+
+              return Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A2A2A),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        GestureDetector(
-                          onTap: () => _adicionarOuEditarReceita(receita: receita, index: index),
-                          child: const Icon(Icons.edit, color: Colors.white),
+                        Text(
+                          receita.nome,
+                          style: const TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () => _excluirReceita(index),
-                          child: const Icon(Icons.delete, color: Colors.redAccent),
+                        const SizedBox(height: 5),
+                        Expanded(
+                          child: ListView(
+                            children: receita.ingredientes.entries
+                                .map((e) => Text(
+                                      '${e.key}: ${e.value}',
+                                      style: const TextStyle(
+                                          color: Colors.white70, fontSize: 12),
+                                    ))
+                                .toList(),
+                          ),
                         ),
+                        if (receita.favorito)
+                          const Align(
+                            alignment: Alignment.bottomRight,
+                            child: Icon(Icons.star, color: Colors.amber),
+                          ),
                       ],
                     ),
                   ),
-              ],
-            );
-          },
-        ),
+
+                  if (modoEdicao)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => _adicionarOuEditarReceita(
+                                receita: receita, id: doc.id),
+                            child: const Icon(Icons.edit, color: Colors.white),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => excluirReceita(doc.id),
+                            child: const Icon(Icons.delete,
+                                color: Colors.redAccent),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            },
+          );
+        },
       ),
+
       bottomNavigationBar: Container(
         color: const Color(0xFF1A1A1A),
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
+        child: StreamBuilder<QuerySnapshot>(
+          stream: _receitasRef.snapshots(),
+          builder: (context, snapshot) {
+            List<Receita> favs = [];
+            if (snapshot.hasData) {
+              for (var doc in snapshot.data!.docs) {
+                final receita =
+                    Receita.fromJson(doc.data() as Map<String, dynamic>);
+                if (receita.favorito) favs.add(receita);
+              }
+            }
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  onPressed: () => _adicionarOuEditarReceita(),
-                  iconSize: 28,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      onPressed: () => _adicionarOuEditarReceita(),
+                      iconSize: 28,
+                    ),
+                    const Text('Adicionar',
+                        style: TextStyle(color: Colors.white)),
+                  ],
                 ),
-                const Text('Adicionar', style: TextStyle(color: Colors.white)),
-              ],
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.star, color: Colors.white),
-                  onPressed: _abrirFavoritos,
-                  iconSize: 28,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.star, color: Colors.white),
+                      onPressed: () => _abrirFavoritos(favs),
+                      iconSize: 28,
+                    ),
+                    const Text('Favoritos',
+                        style: TextStyle(color: Colors.white)),
+                  ],
                 ),
-                const Text('Favoritos', style: TextStyle(color: Colors.white)),
               ],
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

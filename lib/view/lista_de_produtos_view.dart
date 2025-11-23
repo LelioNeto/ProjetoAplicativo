@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ListaDeProdutosView extends StatefulWidget {
   const ListaDeProdutosView({super.key});
@@ -10,169 +10,185 @@ class ListaDeProdutosView extends StatefulWidget {
 }
 
 class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
-  static const _storageKey = 'lista_compras_v1';
-  final List<_Item> _itens = [];
-
-  // Paleta local para harmonizar com o app (dark + textos brancos)
-  static const _bgColor = Color(0xFF0F0F0F);
-  static const _cardColor = Color(0xFF1A1A1A);
+  static const _bg = Color(0xFF0F0F0F);
+  static const _card = Color(0xFF1A1A1A);
   static const _text = Colors.white;
-  static const _subText = Colors.white70;
+  static const _sub = Colors.white70;
   static const _icon = Colors.white70;
-  static const _divider = Colors.white12;
+  static const _vermelho = Color.fromARGB(255, 150, 54, 54);
+
+  final _auth = FirebaseAuth.instance;
+
+  User? _user;
+  bool _carregandoUsuario = true;
 
   @override
   void initState() {
     super.initState();
-    _carregar();
+
+    _auth.userChanges().listen((u) {
+      setState(() {
+        _user = u;
+        _carregandoUsuario = false;
+      });
+    });
   }
 
-  Future<void> _carregar() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString(_storageKey);
-    if (jsonStr != null && jsonStr.isNotEmpty) {
-      final List<dynamic> raw = json.decode(jsonStr);
-      setState(() {
-        _itens
-          ..clear()
-          ..addAll(raw.map((e) => _Item.fromMap(e as Map<String, dynamic>)));
+  CollectionReference<Map<String, dynamic>> get _col {
+    return FirebaseFirestore.instance
+        .collection("usuarios")
+        .doc(_user!.uid)
+        .collection("lista_compras");
+  }
+
+  Future<void> _addOrIncrement(String nome, int qtd) async {
+    final lower = nome.toLowerCase().trim();
+
+    final query = await _col.where("nomeLower", isEqualTo: lower).limit(1).get();
+
+    if (query.docs.isNotEmpty) {
+      final doc = query.docs.first.reference;
+
+      await FirebaseFirestore.instance.runTransaction((tx) async {
+        final snap = await tx.get(doc);
+        int atual = (snap["quantidade"] ?? 0);
+        tx.update(doc, {"quantidade": atual + qtd});
       });
+
+      _msg("Quantidade atualizada");
+    } else {
+      await _col.add({
+        "nome": nome.trim(),
+        "nomeLower": lower,
+        "quantidade": qtd,
+        "comprado": false,
+        "createdAt": FieldValue.serverTimestamp(),
+      });
+
+      _msg("Item adicionado");
     }
   }
 
-  Future<void> _salvar() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _storageKey,
-      json.encode(_itens.map((e) => e.toMap()).toList()),
+  Future<void> _toggleComprado(id, atual) async {
+    await _col.doc(id).update({"comprado": !atual});
+  }
+
+  Future<void> _updateQtd(id, qtd) async {
+    if (qtd <= 0) {
+      await _col.doc(id).delete();
+      _msg("Item removido");
+    } else {
+      await _col.doc(id).update({"quantidade": qtd});
+    }
+  }
+
+  void _msg(String msg, {bool erro = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: erro ? Colors.red : Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
-  Future<void> _adicionarItemSheet() async {
-    final nomeCtrl = TextEditingController();
-    final qtdCtrl = TextEditingController(text: '1');
+  Stream<QuerySnapshot<Map<String, dynamic>>> _stream() {
+    return _col.orderBy("comprado").snapshots();
+  }
+
+  Future<void> _addSheet() async {
+    final nome = TextEditingController();
+    final qtd = TextEditingController(text: "1");
     final formKey = GlobalKey<FormState>();
 
-    await showModalBottomSheet(
+    showModalBottomSheet(
       context: context,
-      useSafeArea: true,
+      backgroundColor: _card,
       isScrollControlled: true,
-      backgroundColor: _cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) {
-        final viewInsets = MediaQuery.of(ctx).viewInsets;
-        final inputBorder = OutlineInputBorder(
-          borderSide: const BorderSide(color: _divider),
-          borderRadius: BorderRadius.circular(12),
-        );
+        final pad = MediaQuery.of(ctx).viewInsets.bottom;
+
         return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: 16 + viewInsets.bottom,
-          ),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, pad + 16),
           child: Form(
             key: formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Adicionar item',
-                  style: Theme.of(
-                    ctx,
-                  ).textTheme.titleLarge?.copyWith(color: _text),
-                ),
+                const Text("Adicionar item",
+                    style: TextStyle(color: _text, fontSize: 18)),
                 const SizedBox(height: 12),
+
+                // CAMPO NOME — agora com cursor e seleção vermelha
                 TextFormField(
-                  controller: nomeCtrl,
+                  controller: nome,
                   style: const TextStyle(color: _text),
-                  decoration: InputDecoration(
-                    labelText: 'Nome do item',
-                    labelStyle: const TextStyle(color: _subText),
-                    hintText: 'Ex.: Arroz',
-                    hintStyle: const TextStyle(color: _subText),
-                    filled: true,
-                    fillColor: _bgColor,
-                    enabledBorder: inputBorder,
-                    focusedBorder: inputBorder.copyWith(
-                      borderSide: const BorderSide(color: Colors.white24),
+                  cursorColor: _vermelho,
+                  decoration: const InputDecoration(
+                    labelText: "Nome",
+                    labelStyle: TextStyle(color: _sub),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: _vermelho,
+                        width: 2,
+                      ),
                     ),
                   ),
-                  textInputAction: TextInputAction.next,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Informe o nome';
-                    if (v.trim().length > 60) return 'Nome muito longo';
-                    return null;
-                  },
+                  validator: (v) => v!.isEmpty ? "Digite um nome" : null,
                 ),
+
                 const SizedBox(height: 12),
+
+                // CAMPO QUANTIDADE — cursor vermelho também
                 TextFormField(
-                  controller: qtdCtrl,
+                  controller: qtd,
                   style: const TextStyle(color: _text),
-                  decoration: InputDecoration(
-                    labelText: 'Quantidade',
-                    labelStyle: const TextStyle(color: _subText),
-                    filled: true,
-                    fillColor: _bgColor,
-                    enabledBorder: inputBorder,
-                    focusedBorder: inputBorder.copyWith(
-                      borderSide: const BorderSide(color: Colors.white24),
-                    ),
-                  ),
+                  cursorColor: _vermelho,
                   keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Quantidade",
+                    labelStyle: TextStyle(color: _sub),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: _vermelho,
+                        width: 2,
+                      ),
+                    ),
+                  ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Informe a quantidade';
-                    }
+                    if (v!.isEmpty) return "Digite";
                     final n = int.tryParse(v);
-                    if (n == null || n <= 0) return 'Quantidade inválida';
-                    if (n > 9999) return 'Quantidade muito alta';
+                    if (n == null || n <= 0) return "Número inválido";
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        icon: const Icon(Icons.close, color: _text),
-                        label: const Text(
-                          'Cancelar',
-                          style: TextStyle(color: _text),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: _divider),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          if (!formKey.currentState!.validate()) return;
-                          final nome = nomeCtrl.text.trim();
-                          final qtd = int.parse(qtdCtrl.text.trim());
-                          _adicionarOuSomar(nome, qtd);
-                          Navigator.of(ctx).pop();
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Adicionar'),
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.black,
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                      ),
-                    ),
-                  ],
+
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      _addOrIncrement(nome.text, int.parse(qtd.text));
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text("Salvar"),
                 ),
               ],
             ),
@@ -182,172 +198,117 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
     );
   }
 
-  void _adicionarOuSomar(String nome, int qtd) {
-    final idx = _itens.indexWhere(
-      (e) => e.nome.toLowerCase().trim() == nome.toLowerCase().trim(),
-    );
-    setState(() {
-      if (idx >= 0) {
-        _itens[idx] = _itens[idx].copyWith(
-          quantidade: _itens[idx].quantidade + qtd,
-        );
-      } else {
-        _itens.add(_Item(nome: nome, quantidade: qtd));
-      }
-    });
-    _salvar();
-  }
-
-  void _removerItem(int index) {
-    setState(() {
-      _itens.removeAt(index);
-    });
-    _salvar();
-  }
-
-  void _alterarQuantidade(int index, int delta) {
-    final atual = _itens[index].quantidade + delta;
-    if (atual <= 0) {
-      _removerItem(index);
-      return;
-    }
-    setState(() {
-      _itens[index] = _itens[index].copyWith(quantidade: atual);
-    });
-    _salvar();
-  }
-
   @override
   Widget build(BuildContext context) {
+    if (_carregandoUsuario) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.red),
+        ),
+      );
+    }
+
+    if (_user == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text("Usuário não logado", style: TextStyle(color: Colors.white)),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: _bgColor,
+      backgroundColor: _bg,
       appBar: AppBar(
-        title: const Text('Lista de Compras', style: TextStyle(color: _text)),
-        backgroundColor: const Color(0xFF1A1A1A),
-        iconTheme: const IconThemeData(color: _text),
+        title: const Text("Lista de Compras", style: TextStyle(color: _text)),
+        backgroundColor: _card,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
+
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _adicionarItemSheet,
+        onPressed: _addSheet,
+        label: const Text("Adicionar"),
         icon: const Icon(Icons.add),
-        label: const Text('Adicionar'),
-        foregroundColor: Colors.black,
         backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
-      body: _itens.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.shopping_basket_outlined, size: 64, color: _icon),
-                  SizedBox(height: 12),
-                  Text('Sua lista está vazia', style: TextStyle(color: _text)),
-                ],
-              ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              itemBuilder: (context, index) {
-                final item = _itens[index];
-                return Dismissible(
-                  key: ValueKey('${item.nome}_${item.quantidade}_$index'),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    color: const Color(0xFF8B0000),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  onDismissed: (_) => _removerItem(index),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: _cardColor,
-                      borderRadius: BorderRadius.circular(14),
+
+      body: StreamBuilder(
+        stream: _stream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: _vermelho),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text("Erro ao carregar", style: TextStyle(color: _text)),
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: Text("Sua lista está vazia", style: TextStyle(color: _text)),
+            );
+          }
+
+          final itens = snapshot.data!.docs;
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(12),
+            itemCount: itens.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (_, i) {
+              final doc = itens[i];
+              final d = doc.data();
+
+              return Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () => _toggleComprado(doc.id, d["comprado"]),
+                      child: Icon(
+                        d["comprado"]
+                            ? Icons.check_circle
+                            : Icons.circle_outlined,
+                        color:
+                            d["comprado"] ? Colors.greenAccent : _icon,
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "${d["nome"]}\nQuantidade: ${d["quantidade"]}",
+                        style: const TextStyle(color: _text),
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.checklist, color: _icon),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.nome,
-                                style: const TextStyle(
-                                  color: _text,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Quantidade: ${item.quantidade}',
-                                style: const TextStyle(
-                                  color: _subText,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              tooltip: 'Diminuir',
-                              onPressed: () => _alterarQuantidade(index, -1),
-                              icon: const Icon(
-                                Icons.remove_circle_outline,
-                                color: _icon,
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: 'Aumentar',
-                              onPressed: () => _alterarQuantidade(index, 1),
-                              icon: const Icon(
-                                Icons.add_circle_outline,
-                                color: _icon,
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: 'Remover',
-                              onPressed: () => _removerItem(index),
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                color: _icon,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    IconButton(
+                      icon: const Icon(Icons.remove, color: _icon),
+                      onPressed: () =>
+                          _updateQtd(doc.id, d["quantidade"] - 1),
                     ),
-                  ),
-                );
-              },
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemCount: _itens.length,
-            ),
+                    IconButton(
+                      icon: const Icon(Icons.add, color: _icon),
+                      onPressed: () =>
+                          _updateQtd(doc.id, d["quantidade"] + 1),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _col.doc(doc.id).delete(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
-}
-
-class _Item {
-  final String nome;
-  final int quantidade;
-
-  const _Item({required this.nome, required this.quantidade});
-
-  _Item copyWith({String? nome, int? quantidade}) =>
-      _Item(nome: nome ?? this.nome, quantidade: quantidade ?? this.quantidade);
-
-  Map<String, dynamic> toMap() => {'nome': nome, 'quantidade': quantidade};
-
-  factory _Item.fromMap(Map<String, dynamic> map) => _Item(
-    nome: map['nome'] as String,
-    quantidade: (map['quantidade'] as num).toInt(),
-  );
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tela_login_view.dart';
-import '../services/auth_service.dart'; // Import do AuthService
+import '../services/auth_service.dart';
 
 class TelaCadastroView extends StatefulWidget {
   const TelaCadastroView({super.key});
@@ -16,6 +16,9 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
   final TextEditingController confirmaSenhaController = TextEditingController();
   final TextEditingController telefoneController = TextEditingController();
 
+  // ======================================================
+  //  ALTERADO SOMENTE AQUI PARA FUNCIONAR COM AuthService OTIMIZADO
+  // ======================================================
   void _realizarCadastro() async {
     String nome = nomeController.text.trim();
     String email = emailController.text.trim();
@@ -58,7 +61,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
       return;
     }
 
-    // --- Validações de segurança exigidas no PDF ---
+    // --- Validações de segurança exigidas ---
     bool senhaValida =
         senha.length >= 6 &&
         senha.contains(RegExp(r'[A-Z]')) &&
@@ -78,19 +81,23 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
       return;
     }
 
-    // --- Chamar o Firebase pelo AuthService ---
+    // ======================================================
+    // AQUI ESTÁ A MUDANÇA PRINCIPAL:
+    // cadastrarUsuario() agora retorna String? (erro) ou null (sucesso)
+    // ======================================================
     final auth = AuthService();
-    bool sucesso = await auth.cadastrarUsuario(
+    String? erro = await auth.cadastrarUsuario(
       nome: nome,
       email: email,
       senha: senha,
       telefone: telefone,
     );
 
-    if (!sucesso) {
+    if (erro != null) {
+      // Houve erro → mostrar mensagem retornada
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Este e-mail já está cadastrado."),
+        SnackBar(
+          content: Text(erro),
           backgroundColor: Colors.orangeAccent,
         ),
       );
@@ -167,6 +174,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
               Image.asset('image/LogoChefList.png', height: 190),
               const SizedBox(height: 16),
 
+              // Inputs
               TextField(
                 controller: nomeController,
                 decoration: buildInputDecoration("Nome", Icons.person),
@@ -192,10 +200,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
               TextField(
                 controller: confirmaSenhaController,
                 obscureText: true,
-                decoration: buildInputDecoration(
-                  "Confirme sua Senha",
-                  Icons.lock,
-                ),
+                decoration: buildInputDecoration("Confirme sua Senha", Icons.lock),
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
@@ -203,11 +208,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
               TextField(
                 controller: telefoneController,
                 keyboardType: TextInputType.phone,
-                decoration: buildInputDecoration(
-                  "Número de Telefone",
-                  Icons.phone,
-                  hintText: "(99) 99999-9999",
-                ),
+                decoration: buildInputDecoration("Número de Telefone", Icons.phone, hintText: "(99) 99999-9999"),
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 24),
@@ -227,8 +228,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => const TelaLoginView()),
+                    MaterialPageRoute(builder: (context) => const TelaLoginView()),
                   );
                 },
                 child: RichText(
