@@ -12,6 +12,7 @@ class TelaRedefinirSenhaView extends StatefulWidget {
 class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
+  bool carregando = false;
 
   @override
   void dispose() {
@@ -38,27 +39,31 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
     );
   }
 
-  // =====================================================
-  // AJUSTADO PARA FUNCIONAR COM O NOVO AUTHSERVICE
-  // =====================================================
+  // ============================================================
+  // ENVIA O E-MAIL DE RECUPERAÇÃO
+  // ============================================================
   void _redefinirSenha() async {
-    String email = _emailCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
 
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Preencha o e-mail'),
+          content: Text('Preencha o e-mail.'),
           backgroundColor: Colors.redAccent,
         ),
       );
       return;
     }
 
+    setState(() => carregando = true);
+
     final auth = AuthService();
-    String? erro = await auth.redefinirSenha(email); // mudou aqui
+    final erro = await auth.redefinirSenha(email);
+
+    setState(() => carregando = false);
 
     if (erro == null) {
-      // SUCESSO
+      // SUCESSO → Email enviado
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -70,10 +75,10 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const TelaLoginView()),
+        MaterialPageRoute(builder: (_) => const TelaLoginView()),
       );
     } else {
-      // FALHA
+      // FALHA → Mostra erro traduzido
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(erro),
@@ -135,9 +140,10 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
                             hint: 'E-mail',
                             icon: Icons.mail_outline,
                           ),
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Informe seu e-mail'
-                              : null,
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty)
+                                  ? 'Informe seu e-mail'
+                                  : null,
                         ),
                         const SizedBox(height: 24),
 
@@ -153,18 +159,29 @@ class _TelaRedefinirSenhaViewState extends State<TelaRedefinirSenhaView> {
                               ),
                               elevation: 0,
                             ),
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                _redefinirSenha();
-                              }
-                            },
-                            child: const Text(
-                              'Enviar e-mail de redefinição',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: .2,
-                              ),
-                            ),
+                            onPressed: carregando
+                                ? null
+                                : () {
+                                    if (_formKey.currentState!.validate()) {
+                                      _redefinirSenha();
+                                    }
+                                  },
+                            child: carregando
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      color: Colors.black,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Enviar e-mail de redefinição',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: .2,
+                                    ),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 16),
