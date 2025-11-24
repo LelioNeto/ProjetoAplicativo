@@ -26,30 +26,77 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'App de Receitas',
       debugShowCheckedModeBanner: false,
+
+      // =========================
+      //   🎨  TEMA GLOBAL
+      // =========================
       theme: ThemeData(
+        brightness: Brightness.dark,
+
         scaffoldBackgroundColor: const Color(0xFF0F0F0F),
+
+        // Cor principal do app (vermelho padrão)
+        primaryColor: const Color.fromARGB(255, 150, 54, 54),
+
+        colorScheme: const ColorScheme.dark(
+          primary: Color.fromARGB(255, 150, 54, 54),
+          secondary: Color.fromARGB(255, 150, 54, 54),
+        ),
+
+        // Cursor, seleção e handles VERMELHOS em todo o app
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Color.fromARGB(255, 150, 54, 54),
+          selectionColor: Color.fromARGB(90, 150, 54, 54),
+          selectionHandleColor: Color.fromARGB(255, 150, 54, 54),
+        ),
+
+        // Estilo padrão dos TextFields
+        inputDecorationTheme: const InputDecorationTheme(
+          labelStyle: TextStyle(color: Colors.white70),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.white24),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Color.fromARGB(255, 150, 54, 54),
+              width: 2,
+            ),
+          ),
+        ),
+
+        // Loading global em vermelho
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          color: Color.fromARGB(255, 150, 54, 54),
+        ),
+
+        // AppBar — seta voltar branca e fundo correto
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1A1A1A),
+          iconTheme: IconThemeData(color: Colors.white),
+          foregroundColor: Colors.white,
+        ),
       ),
 
-      // 🔥 ESSENCIAL PARA O WEB — NÃO USE initialRoute!
+      // ============================================
+      //         ⚡ STREAM PARA LOGIN NO FIREBASE
+      // ============================================
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(
-                child: CircularProgressIndicator(
-                  color: Colors.red,
-                ),
+                child: CircularProgressIndicator(),
               ),
             );
           }
 
-          // usuário não logado
+          // Usuário NÃO logado → Tela Principal
           if (!snapshot.hasData) {
             return const TelaPrincipalView();
           }
 
-          // usuário logado → agora sim pode ir para o menu
+          // Usuário logado → Menu principal
           return const MenuView();
         },
       ),

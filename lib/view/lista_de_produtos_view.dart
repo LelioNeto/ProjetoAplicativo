@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'tela_pesquisa_produtos_view.dart';
 
 class ListaDeProdutosView extends StatefulWidget {
   const ListaDeProdutosView({super.key});
@@ -41,7 +42,7 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
         .collection("lista_compras");
   }
 
-  Future<void> _addOrIncrement(String nome, int qtd) async {
+  Future<void> _addOrIncrement(String nome, int qtd, String? marca) async {
     final lower = nome.toLowerCase().trim();
 
     final query = await _col.where("nomeLower", isEqualTo: lower).limit(1).get();
@@ -63,6 +64,7 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
         "quantidade": qtd,
         "comprado": false,
         "createdAt": FieldValue.serverTimestamp(),
+        "marca": marca?.trim().isEmpty == true ? null : marca?.trim(),
       });
 
       _msg("Item adicionado");
@@ -99,6 +101,8 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
   Future<void> _addSheet() async {
     final nome = TextEditingController();
     final qtd = TextEditingController(text: "1");
+    final marca = TextEditingController();
+
     final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -122,7 +126,6 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
                     style: TextStyle(color: _text, fontSize: 18)),
                 const SizedBox(height: 12),
 
-                // CAMPO NOME — agora com cursor e seleção vermelha
                 TextFormField(
                   controller: nome,
                   style: const TextStyle(color: _text),
@@ -146,7 +149,28 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
 
                 const SizedBox(height: 12),
 
-                // CAMPO QUANTIDADE — cursor vermelho também
+                TextFormField(
+                  controller: marca,
+                  style: const TextStyle(color: _text),
+                  cursorColor: _vermelho,
+                  decoration: const InputDecoration(
+                    labelText: "Marca (opcional)",
+                    labelStyle: TextStyle(color: _sub),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: _vermelho,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
                 TextFormField(
                   controller: qtd,
                   style: const TextStyle(color: _text),
@@ -184,7 +208,11 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
                   ),
                   onPressed: () {
                     if (formKey.currentState!.validate()) {
-                      _addOrIncrement(nome.text, int.parse(qtd.text));
+                      _addOrIncrement(
+                        nome.text,
+                        int.parse(qtd.text),
+                        marca.text,
+                      );
                       Navigator.pop(context);
                     }
                   },
@@ -203,7 +231,7 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
     if (_carregandoUsuario) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: Colors.red),
+          child: CircularProgressIndicator(color: _vermelho),
         ),
       );
     }
@@ -222,6 +250,44 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
         title: const Text("Lista de Compras", style: TextStyle(color: _text)),
         backgroundColor: _card,
         iconTheme: const IconThemeData(color: Colors.white),
+
+        // 🔍 NOVO BOTÃO DE BUSCAR
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TelaPesquisaProdutosView(userId: _user!.uid),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _vermelho,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.search, color: Colors.white, size: 20),
+                    SizedBox(width: 6),
+                    Text(
+                      "Buscar",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
 
       floatingActionButton: FloatingActionButton.extended(
@@ -277,17 +343,46 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
                         d["comprado"]
                             ? Icons.check_circle
                             : Icons.circle_outlined,
-                        color:
-                            d["comprado"] ? Colors.greenAccent : _icon,
+                        color: d["comprado"]
+                            ? Colors.greenAccent
+                            : _icon,
                       ),
                     ),
                     const SizedBox(width: 12),
+
                     Expanded(
-                      child: Text(
-                        "${d["nome"]}\nQuantidade: ${d["quantidade"]}",
-                        style: const TextStyle(color: _text),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            d["nome"],
+                            style: const TextStyle(
+                              color: _text,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          if (d["marca"] != null)
+                            Text(
+                              "Marca: ${d["marca"]}",
+                              style: const TextStyle(
+                                color: _sub,
+                                fontSize: 14,
+                              ),
+                            ),
+
+                          Text(
+                            "Quantidade: ${d["quantidade"]}",
+                            style: const TextStyle(
+                              color: _text,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+
                     IconButton(
                       icon: const Icon(Icons.remove, color: _icon),
                       onPressed: () =>

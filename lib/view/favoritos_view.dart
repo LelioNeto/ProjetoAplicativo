@@ -19,14 +19,22 @@ class FavoritosView extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: receitas.isEmpty
             ? const Center(
-                child: Text('Nenhuma receita favorita',
-                    style: TextStyle(color: Colors.white, fontSize: 16)))
+                child: Text(
+                  'Nenhuma receita favorita',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              )
             : GridView.builder(
                 itemCount: receitas.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, childAspectRatio: 1.10, crossAxisSpacing: 8, mainAxisSpacing: 8),
+                  crossAxisCount: 2,
+                  childAspectRatio: 1.10,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
                 itemBuilder: (context, index) {
                   final receita = receitas[index];
+
                   return Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFF2A2A2A),
@@ -36,22 +44,59 @@ class FavoritosView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(receita.nome,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        // Nome
+                        Text(
+                          receita.nome,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        // Categoria (se existir)
+                        if (receita.categoria != null)
+                          Text(
+                            receita.categoria!,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+
+                        // Tempo de preparo (se existir)
+                        if (receita.tempoPreparo != null)
+                          Text(
+                            '⏱️ ${receita.tempoPreparo!}',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+
                         const SizedBox(height: 5),
+
+                        // Ingredientes
                         Expanded(
                           child: ListView(
                             children: receita.ingredientes.entries
-                                .map((e) => Text('${e.key}: ${e.value}',
-                                    style: const TextStyle(color: Colors.white70, fontSize: 12)))
+                                .map(
+                                  (e) => Text(
+                                    '${e.key}: ${e.value}',
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                )
                                 .toList(),
                           ),
                         ),
-                        if (receita.favorito)
-                          const Align(
-                            alignment: Alignment.bottomRight,
-                            child: Icon(Icons.star, color: Colors.amber),
-                          ),
+
+                        // Ícone de favorito
+                        const Align(
+                          alignment: Alignment.bottomRight,
+                          child: Icon(Icons.star, color: Colors.amber),
+                        ),
                       ],
                     ),
                   );

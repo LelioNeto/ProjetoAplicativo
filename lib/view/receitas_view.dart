@@ -8,10 +8,15 @@ class Receita {
   Map<String, String> ingredientes;
   bool favorito;
 
+  String? categoria;
+  String? tempoPreparo;
+
   Receita({
     required this.nome,
     required this.ingredientes,
     this.favorito = false,
+    this.categoria,
+    this.tempoPreparo,
   });
 
   Map<String, dynamic> toJson() {
@@ -19,15 +24,21 @@ class Receita {
       'nome': nome,
       'ingredientes': ingredientes,
       'favorito': favorito,
+      'categoria': categoria,
+      'tempoPreparo': tempoPreparo,
     };
   }
 
   factory Receita.fromJson(Map<String, dynamic> json) {
-    Map<String, dynamic> ing = Map<String, dynamic>.from(json['ingredientes']);
+    final ingredientesMap = Map<String, dynamic>.from(json['ingredientes']);
+
     return Receita(
       nome: json['nome'],
-      ingredientes: ing.map((key, value) => MapEntry(key, value.toString())),
+      ingredientes: ingredientesMap
+          .map((key, value) => MapEntry(key, value.toString())),
       favorito: json['favorito'] ?? false,
+      categoria: json['categoria'],
+      tempoPreparo: json['tempoPreparo'],
     );
   }
 }
@@ -63,6 +74,10 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
 
   void _adicionarOuEditarReceita({Receita? receita, String? id}) {
     final nomeCtrl = TextEditingController(text: receita?.nome ?? '');
+    final categoriaCtrl =
+        TextEditingController(text: receita?.categoria ?? '');
+    final tempoCtrl =
+        TextEditingController(text: receita?.tempoPreparo ?? '');
 
     List<MapEntry<TextEditingController, TextEditingController>>
         ingredientesCtrl = [];
@@ -75,7 +90,8 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
       });
     } else {
       ingredientesCtrl.add(
-          MapEntry(TextEditingController(), TextEditingController()));
+        MapEntry(TextEditingController(), TextEditingController()),
+      );
     }
 
     bool favorito = receita?.favorito ?? false;
@@ -111,12 +127,41 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('Ingredientes', style: TextStyle(color: Colors.white70)),
+
+                TextField(
+                  controller: categoriaCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Categoria (opcional)',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white38),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                TextField(
+                  controller: tempoCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Tempo de preparo (opcional)',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white38),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+                const Text("Ingredientes",
+                    style: TextStyle(color: Colors.white70)),
                 const SizedBox(height: 5),
 
                 ...ingredientesCtrl.asMap().entries.map((entry) {
                   int idx = entry.key;
                   var controllers = entry.value;
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: Row(
@@ -129,7 +174,8 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                               labelText: 'Ingrediente',
                               labelStyle: TextStyle(color: Colors.white70),
                               enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white38),
+                                borderSide:
+                                    BorderSide(color: Colors.white38),
                               ),
                             ),
                           ),
@@ -143,7 +189,8 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                               labelText: 'Quantidade',
                               labelStyle: TextStyle(color: Colors.white70),
                               enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white38),
+                                borderSide:
+                                    BorderSide(color: Colors.white38),
                               ),
                             ),
                           ),
@@ -165,23 +212,25 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                 TextButton.icon(
                   onPressed: () {
                     setModalState(() {
-                      ingredientesCtrl.add(MapEntry(
-                          TextEditingController(), TextEditingController()));
+                      ingredientesCtrl.add(
+                        MapEntry(TextEditingController(),
+                            TextEditingController()),
+                      );
                     });
                   },
                   icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text('Adicionar Ingrediente',
+                  label: const Text("Adicionar ingrediente",
                       style: TextStyle(color: Colors.white)),
                 ),
 
                 Row(
                   children: [
-                    const Text('Favoritar: ', style: TextStyle(color: Colors.white)),
+                    const Text("Favoritar:",
+                        style: TextStyle(color: Colors.white)),
                     Switch(
                       value: favorito,
-                      onChanged: (v) {
-                        setModalState(() => favorito = v);
-                      },
+                      onChanged: (v) =>
+                          setModalState(() => favorito = v),
                       activeColor: Colors.amber,
                     ),
                   ],
@@ -191,8 +240,10 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                   onPressed: () async {
                     Map<String, String> mapIng = {};
                     for (var c in ingredientesCtrl) {
-                      if (c.key.text.isNotEmpty && c.value.text.isNotEmpty) {
-                        mapIng[c.key.text.trim()] = c.value.text.trim();
+                      if (c.key.text.isNotEmpty &&
+                          c.value.text.isNotEmpty) {
+                        mapIng[c.key.text.trim()] =
+                            c.value.text.trim();
                       }
                     }
 
@@ -200,6 +251,12 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                       nome: nomeCtrl.text.trim(),
                       ingredientes: mapIng,
                       favorito: favorito,
+                      categoria: categoriaCtrl.text.trim().isEmpty
+                          ? null
+                          : categoriaCtrl.text.trim(),
+                      tempoPreparo: tempoCtrl.text.trim().isEmpty
+                          ? null
+                          : tempoCtrl.text.trim(),
                     );
 
                     if (id != null) {
@@ -210,13 +267,13 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
 
                     Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black),
                   child: Text(
-                    id != null ? 'Editar Receita' : 'Adicionar Receita',
+                    id != null ? "Editar Receita" : "Adicionar Receita",
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
-
                 const SizedBox(height: 20),
               ],
             ),
@@ -240,19 +297,17 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
-        title: const Text('Receitas'),
+        title: const Text("Receitas"),
         backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: Colors.white,
         actions: [
           TextButton(
-            onPressed: () {
-              setState(() => modoEdicao = !modoEdicao);
-            },
+            onPressed: () => setState(() => modoEdicao = !modoEdicao),
             child: Text(
-              modoEdicao ? 'Cancelar' : 'Editar',
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              modoEdicao ? "Cancelar" : "Editar",
+              style: const TextStyle(color: Colors.white),
             ),
-          ),
+          )
         ],
       ),
 
@@ -268,7 +323,8 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
 
           return GridView.builder(
             itemCount: docs.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               childAspectRatio: 1.10,
               crossAxisSpacing: 8,
@@ -276,7 +332,8 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
             ),
             itemBuilder: (context, index) {
               final doc = docs[index];
-              final receita = Receita.fromJson(doc.data() as Map<String, dynamic>);
+              final receita =
+                  Receita.fromJson(doc.data() as Map<String, dynamic>);
 
               if (receita.favorito) listaFavoritos.add(receita);
 
@@ -289,29 +346,86 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                     ),
                     padding: const EdgeInsets.all(8),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
                       children: [
                         Text(
                           receita.nome,
                           style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 5),
-                        Expanded(
-                          child: ListView(
-                            children: receita.ingredientes.entries
-                                .map((e) => Text(
-                                      '${e.key}: ${e.value}',
-                                      style: const TextStyle(
-                                          color: Colors.white70, fontSize: 12),
-                                    ))
-                                .toList(),
+
+                        const SizedBox(height: 4),
+
+                        if (receita.categoria != null)
+                          Text(
+                            receita.categoria!,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+
+                        if (receita.tempoPreparo != null)
+                          Row(
+                            children: [
+                              const Icon(Icons.timer_outlined,
+                                  color: Colors.white70,
+                                  size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                receita.tempoPreparo!,
+                                style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13),
+                              ),
+                            ],
+                          ),
+
+                        const SizedBox(height: 6),
+
+                        Container(
+                          height: 1,
+                          color: Colors.white24,
+                          margin: const EdgeInsets.only(bottom: 6),
+                        ),
+
+                        const Text(
+                          "Ingredientes:",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
+
+                        const SizedBox(height: 4),
+
+                        Expanded(
+                          child: ListView(
+                            children:
+                                receita.ingredientes.entries.map((e) {
+                              return Text(
+                                "• ${e.key}: ${e.value}",
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+
                         if (receita.favorito)
                           const Align(
                             alignment: Alignment.bottomRight,
-                            child: Icon(Icons.star, color: Colors.amber),
+                            child: Icon(Icons.star,
+                                color: Colors.amber),
                           ),
                       ],
                     ),
@@ -324,9 +438,13 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                       child: Row(
                         children: [
                           GestureDetector(
-                            onTap: () => _adicionarOuEditarReceita(
-                                receita: receita, id: doc.id),
-                            child: const Icon(Icons.edit, color: Colors.white),
+                            onTap: () =>
+                                _adicionarOuEditarReceita(
+                              receita: receita,
+                              id: doc.id,
+                            ),
+                            child: const Icon(Icons.edit,
+                                color: Colors.white),
                           ),
                           const SizedBox(width: 8),
                           GestureDetector(
@@ -353,8 +471,8 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
             List<Receita> favs = [];
             if (snapshot.hasData) {
               for (var doc in snapshot.data!.docs) {
-                final receita =
-                    Receita.fromJson(doc.data() as Map<String, dynamic>);
+                final receita = Receita.fromJson(
+                    doc.data() as Map<String, dynamic>);
                 if (receita.favorito) favs.add(receita);
               }
             }
@@ -366,11 +484,13 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.add, color: Colors.white),
-                      onPressed: () => _adicionarOuEditarReceita(),
+                      icon: const Icon(Icons.add,
+                          color: Colors.white),
+                      onPressed: () =>
+                          _adicionarOuEditarReceita(),
                       iconSize: 28,
                     ),
-                    const Text('Adicionar',
+                    const Text("Adicionar",
                         style: TextStyle(color: Colors.white)),
                   ],
                 ),
@@ -378,11 +498,13 @@ class _TelaReceitasViewState extends State<TelaReceitasView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.star, color: Colors.white),
-                      onPressed: () => _abrirFavoritos(favs),
+                      icon: const Icon(Icons.star,
+                          color: Colors.white),
+                      onPressed: () =>
+                          _abrirFavoritos(favs),
                       iconSize: 28,
                     ),
-                    const Text('Favoritos',
+                    const Text("Favoritos",
                         style: TextStyle(color: Colors.white)),
                   ],
                 ),
