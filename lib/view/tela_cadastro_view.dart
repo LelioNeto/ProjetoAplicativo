@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'tela_login_view.dart';
 import '../services/auth_service.dart';
 
@@ -16,8 +17,24 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
   final TextEditingController confirmaSenhaController = TextEditingController();
   final TextEditingController telefoneController = TextEditingController();
 
-  // ======================================================
-  //  ALTERADO SOMENTE AQUI PARA FUNCIONAR COM AuthService OTIMIZADO
+  bool mostrarSenha = false;
+  bool mostrarConfirmarSenha = false;
+
+  // Máscara de Telefone
+  String _formatarTelefone(String input) {
+    input = input.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (input.length >= 2) {
+      input = "(${input.substring(0, 2)}) ${input.substring(2)}";
+    }
+    if (input.length > 10) {
+      input =
+          "${input.substring(0, 9)}-${input.substring(9, input.length.clamp(9, 13))}";
+    }
+
+    return input;
+  }
+
   // ======================================================
   void _realizarCadastro() async {
     String nome = nomeController.text.trim();
@@ -26,7 +43,6 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
     String confirmaSenha = confirmaSenhaController.text.trim();
     String telefone = telefoneController.text.trim();
 
-    // --- Validações Básicas ---
     if (nome.isEmpty ||
         email.isEmpty ||
         senha.isEmpty ||
@@ -61,13 +77,12 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
       return;
     }
 
-    // --- Validações de segurança exigidas ---
     bool senhaValida =
         senha.length >= 6 &&
-        senha.contains(RegExp(r'[A-Z]')) &&
-        senha.contains(RegExp(r'[a-z]')) &&
-        senha.contains(RegExp(r'[0-9]')) &&
-        senha.contains(RegExp(r'[!@#\$&*~%]'));
+            senha.contains(RegExp(r'[A-Z]')) &&
+            senha.contains(RegExp(r'[a-z]')) &&
+            senha.contains(RegExp(r'[0-9]')) &&
+            senha.contains(RegExp(r'[!@#\$&*~%]'));
 
     if (!senhaValida) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,10 +96,6 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
       return;
     }
 
-    // ======================================================
-    // AQUI ESTÁ A MUDANÇA PRINCIPAL:
-    // cadastrarUsuario() agora retorna String? (erro) ou null (sucesso)
-    // ======================================================
     final auth = AuthService();
     String? erro = await auth.cadastrarUsuario(
       nome: nome,
@@ -94,17 +105,13 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
     );
 
     if (erro != null) {
-      // Houve erro → mostrar mensagem retornada
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(erro),
-          backgroundColor: Colors.orangeAccent,
-        ),
+        SnackBar(content: Text(erro), backgroundColor: Colors.orangeAccent),
       );
       return;
     }
 
-    // --- Sucesso ---
+    // Sucesso
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Cadastro realizado com sucesso!"),
@@ -123,8 +130,9 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
     InputDecoration buildInputDecoration(
       String label,
       IconData icon, {
-      String? hintText,
-    }) {
+        String? hintText,
+        Widget? suffixIcon,
+      }) {
       return InputDecoration(
         labelText: label,
         hintText: hintText,
@@ -141,6 +149,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
           ),
         ),
         prefixIcon: Icon(icon, color: Colors.white),
+        suffixIcon: suffixIcon,
         floatingLabelStyle: const TextStyle(
           color: Color.fromARGB(255, 150, 54, 54),
         ),
@@ -150,10 +159,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 15, 15, 15),
       appBar: AppBar(
-        title: const Text(
-          "Cadastro",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("Cadastro", style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -174,7 +180,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
               Image.asset('image/LogoChefList.png', height: 190),
               const SizedBox(height: 16),
 
-              // Inputs
+              // Nome
               TextField(
                 controller: nomeController,
                 decoration: buildInputDecoration("Nome", Icons.person),
@@ -182,6 +188,7 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
               ),
               const SizedBox(height: 16),
 
+              // Email
               TextField(
                 controller: emailController,
                 decoration: buildInputDecoration("Email", Icons.email),
@@ -189,28 +196,70 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
               ),
               const SizedBox(height: 16),
 
+              // Senha
               TextField(
                 controller: senhaController,
-                obscureText: true,
-                decoration: buildInputDecoration("Senha", Icons.lock),
+                obscureText: !mostrarSenha,
+                decoration: buildInputDecoration(
+                  "Senha",
+                  Icons.lock,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      mostrarSenha ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () {
+                      setState(() => mostrarSenha = !mostrarSenha);
+                    },
+                  ),
+                ),
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
 
+              // Confirmar Senha
               TextField(
                 controller: confirmaSenhaController,
-                obscureText: true,
-                decoration: buildInputDecoration("Confirme sua Senha", Icons.lock),
+                obscureText: !mostrarConfirmarSenha,
+                decoration: buildInputDecoration(
+                  "Confirme sua Senha",
+                  Icons.lock,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      mostrarConfirmarSenha
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () {
+                      setState(
+                          () => mostrarConfirmarSenha = !mostrarConfirmarSenha);
+                    },
+                  ),
+                ),
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
 
+              // Telefone com máscara
               TextField(
                 controller: telefoneController,
                 keyboardType: TextInputType.phone,
-                decoration: buildInputDecoration("Número de Telefone", Icons.phone, hintText: "(99) 99999-9999"),
+                onChanged: (value) {
+                  final novo = _formatarTelefone(value);
+                  telefoneController.value = TextEditingValue(
+                    text: novo,
+                    selection: TextSelection.collapsed(offset: novo.length),
+                  );
+                },
+                decoration: buildInputDecoration(
+                  "Número de Telefone",
+                  Icons.phone,
+                  hintText: "(99) 99999-9999",
+                ),
                 style: const TextStyle(color: Colors.white),
               ),
+
               const SizedBox(height: 24),
 
               ElevatedButton(
@@ -228,7 +277,8 @@ class _TelaCadastroViewState extends State<TelaCadastroView> {
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const TelaLoginView()),
+                    MaterialPageRoute(
+                        builder: (context) => const TelaLoginView()),
                   );
                 },
                 child: RichText(

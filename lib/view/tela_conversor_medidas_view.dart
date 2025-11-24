@@ -37,11 +37,11 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
         title: const Text('Conversor de Medidas'),
-        centerTitle: true,
-        backgroundColor: Colors.black,
+        //centerTitle: true,
+        backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(

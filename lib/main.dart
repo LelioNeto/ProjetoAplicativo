@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:device_preview/device_preview.dart'; // <- import do Device Preview
 
 import 'firebase_options.dart';
 
@@ -15,7 +16,12 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  runApp(
+    DevicePreview(
+      enabled: true, // <- coloque false para desativar o Device Preview
+      builder: (context) => const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

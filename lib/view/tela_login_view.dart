@@ -16,6 +16,9 @@ class _TelaLoginViewState extends State<TelaLoginView> {
   final TextEditingController senhaController = TextEditingController();
   bool carregando = false;
 
+  /// NOVO — controla exibir/ocultar senha
+  bool mostrarSenha = false;
+
   // ==========================================================
   //   AJUSTADO PARA FUNCIONAR COM O NOVO AuthService
   // ==========================================================
@@ -36,12 +39,11 @@ class _TelaLoginViewState extends State<TelaLoginView> {
     setState(() => carregando = true);
 
     final auth = AuthService();
-    String? erro = await auth.login(email, senha); // mudou aqui
+    String? erro = await auth.login(email, senha);
 
     setState(() => carregando = false);
 
     if (erro == null) {
-      // SUCESSO
       _mostrarMsg('Login realizado com sucesso!', Colors.green);
 
       Navigator.pushReplacement(
@@ -49,12 +51,10 @@ class _TelaLoginViewState extends State<TelaLoginView> {
         MaterialPageRoute(builder: (context) => const MenuView()),
       );
     } else {
-      // FALHA
       _mostrarMsg(erro, Colors.redAccent);
     }
   }
 
-  // ==========================================================
   void _mostrarMsg(String msg, Color cor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -69,12 +69,10 @@ class _TelaLoginViewState extends State<TelaLoginView> {
   Widget build(BuildContext context) {
     InputDecoration buildInputDecoration(
       String label,
-      IconData icon, {
-      String? hintText,
-    }) {
+      IconData icon,
+    ) {
       return InputDecoration(
         labelText: label,
-        hintText: hintText,
         filled: true,
         fillColor: Colors.transparent,
         border: const OutlineInputBorder(),
@@ -121,6 +119,7 @@ class _TelaLoginViewState extends State<TelaLoginView> {
               Image.asset('image/LogoChefList.png', height: 230),
               const SizedBox(height: 16),
 
+              /// CAMPO EMAIL
               TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -129,14 +128,50 @@ class _TelaLoginViewState extends State<TelaLoginView> {
               ),
               const SizedBox(height: 16),
 
+              /// CAMPO SENHA COM OLHO
               TextField(
                 controller: senhaController,
-                obscureText: true,
+                obscureText: !mostrarSenha,
                 style: const TextStyle(color: Colors.white),
-                decoration: buildInputDecoration("Senha", Icons.lock),
+                decoration: InputDecoration(
+                  labelText: "Senha",
+                  filled: true,
+                  fillColor: Colors.transparent,
+                  border: const OutlineInputBorder(),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white10),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color.fromARGB(255, 150, 54, 54),
+                      width: 2,
+                    ),
+                  ),
+                  prefixIcon: const Icon(Icons.lock, color: Colors.white),
+
+                  /// ÍCONE DE OLHO
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      mostrarSenha
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        mostrarSenha = !mostrarSenha;
+                      });
+                    },
+                  ),
+
+                  floatingLabelStyle: const TextStyle(
+                    color: Color.fromARGB(255, 150, 54, 54),
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
 
+              /// BOTÃO LOGIN
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -153,6 +188,7 @@ class _TelaLoginViewState extends State<TelaLoginView> {
               ),
               const SizedBox(height: 16),
 
+              /// ESQUECI MINHA SENHA
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -171,6 +207,7 @@ class _TelaLoginViewState extends State<TelaLoginView> {
               ),
               const SizedBox(height: 24),
 
+              /// CADASTRAR-SE
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

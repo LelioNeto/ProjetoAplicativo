@@ -5,7 +5,7 @@ import 'lista_de_produtos_view.dart';
 import 'receitas_view.dart';
 import 'perfil_view.dart';
 import 'tela_conversor_medidas_view.dart';
-import 'sobre_view.dart'; // import da nova tela "Sobre"
+import 'sobre_view.dart';
 import 'cronometro_view.dart';
 
 class MenuView extends StatelessWidget {
@@ -23,6 +23,7 @@ class MenuView extends StatelessWidget {
     Navigator.push(context, MaterialPageRoute(builder: (context) => tela));
   }
 
+  // 🔥 NOVO: Card com gradiente + brilho suave + sombras premium
   Widget _buildBotaoMenu({
     required BuildContext context,
     required IconData icone,
@@ -32,29 +33,53 @@ class MenuView extends StatelessWidget {
     return GestureDetector(
       onTap: () => _navegar(context, telaDestino),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
         padding: const EdgeInsets.all(20),
+
+        // ⭐ Estética premium aqui
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
+
+          // GRADIENTE SUTIL PRETO → CINZA ESCURO
+          gradient: const LinearGradient(
+            colors: [
+              Color.fromARGB(255, 20, 20, 20),
+              Color.fromARGB(255, 36, 36, 36),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+
+          // 💫 Glow / brilho suave nas bordas
           boxShadow: [
+            
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 5,
-              offset: const Offset(0, 4),
-            ),
+  color: const Color.fromARGB(180, 0, 0, 0), // mais intensa
+  blurRadius: 18,  // sombra maior e suave
+  spreadRadius: 3, // leve expansão
+  offset: const Offset(0, 6), // sombra para baixo
+),
+
           ],
+
+          // 🪞 Borda com leve brilho
+          border: Border.all(
+            color: const Color.fromARGB(110, 255, 255, 255),
+            width: 1.2,
+          ),
         ),
+
+        // CONTEÚDO DO BOTÃO
         child: Row(
           children: [
-            Icon(icone, color: Colors.white, size: 28),
+            Icon(icone, color: Colors.white, size: 30),
             const SizedBox(width: 20),
             Text(
               titulo,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const Spacer(),
@@ -73,36 +98,34 @@ class MenuView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
+
       appBar: AppBar(
         title: const Text("Menu", style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1A1A1A),
         iconTheme: const IconThemeData(color: Colors.white),
+
         leading: IconButton(
           icon: const Icon(Icons.logout),
           tooltip: "Sair",
           onPressed: () => _logout(context),
         ),
+
         actions: [
           IconButton(
             tooltip: "Sobre",
-            onPressed: () {
-              _navegar(context, const SobreView());
-            },
+            onPressed: () => _navegar(context, const SobreView()),
             icon: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
               ),
               padding: const EdgeInsets.all(4),
-              child: const Icon(
-                Icons.question_mark,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: const Icon(Icons.question_mark, color: Colors.white, size: 20),
             ),
           ),
         ],
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 30),
         child: Column(
@@ -113,25 +136,28 @@ class MenuView extends StatelessWidget {
               titulo: "Lista de Compras",
               telaDestino: const ListaDeProdutosView(),
             ),
+
             _buildBotaoMenu(
               context: context,
-              icone: Icons.fastfood,
+              icone: Icons.restaurant_menu,
               titulo: "Receitas",
               telaDestino: const TelaReceitasView(),
             ),
+
             _buildBotaoMenu(
               context: context,
               icone: Icons.straighten,
               titulo: "Conversor de Medidas",
               telaDestino: const TelaConversorMedidasView(),
             ),
-            // ✅ novo botão: Cronômetro
+
             _buildBotaoMenu(
               context: context,
               icone: Icons.timer,
               titulo: "Cronômetro",
               telaDestino: const CronometroView(),
             ),
+
             _buildBotaoMenu(
               context: context,
               icone: Icons.person,

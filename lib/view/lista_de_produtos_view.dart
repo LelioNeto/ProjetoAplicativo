@@ -12,7 +12,6 @@ class ListaDeProdutosView extends StatefulWidget {
 
 class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
   static const _bg = Color(0xFF0F0F0F);
-  static const _card = Color(0xFF1A1A1A);
   static const _text = Colors.white;
   static const _sub = Colors.white70;
   static const _icon = Colors.white70;
@@ -107,7 +106,7 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: _card,
+      backgroundColor: const Color(0xFF1A1A1A),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -248,10 +247,9 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
       backgroundColor: _bg,
       appBar: AppBar(
         title: const Text("Lista de Compras", style: TextStyle(color: _text)),
-        backgroundColor: _card,
+        backgroundColor: const Color(0xFF1A1A1A),
         iconTheme: const IconThemeData(color: Colors.white),
 
-        // 🔍 NOVO BOTÃO DE BUSCAR
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -324,17 +322,39 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
           return ListView.separated(
             padding: const EdgeInsets.all(12),
             itemCount: itens.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (_, i) {
               final doc = itens[i];
               final d = doc.data();
 
               return Container(
                 padding: const EdgeInsets.all(12),
+
+                // ⭐ CARD PREMIUM AQUI
                 decoration: BoxDecoration(
-                  color: _card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 20, 20, 20),
+                      Color.fromARGB(255, 36, 36, 36),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color.fromARGB(180, 0, 0, 0),
+                      blurRadius: 18,
+                      spreadRadius: 3,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: Color.fromARGB(110, 255, 255, 255),
+                    width: 1.2,
+                  ),
                 ),
+
                 child: Row(
                   children: [
                     InkWell(
@@ -346,6 +366,7 @@ class _ListaDeProdutosViewState extends State<ListaDeProdutosView> {
                         color: d["comprado"]
                             ? Colors.greenAccent
                             : _icon,
+                        size: 28,
                       ),
                     ),
                     const SizedBox(width: 12),

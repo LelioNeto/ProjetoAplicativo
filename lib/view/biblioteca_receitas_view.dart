@@ -34,7 +34,7 @@ class _BibliotecaReceitasViewState extends State<BibliotecaReceitasView> {
       backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
         title: const Text("Biblioteca de Receitas"),
-        backgroundColor: Colors.red,
+        backgroundColor: Color(0xFF1A1A1A),
       ),
 
       body: FutureBuilder<List<dynamic>>(
