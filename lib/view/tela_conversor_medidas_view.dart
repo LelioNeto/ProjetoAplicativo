@@ -83,7 +83,6 @@ class _TelaConversorMedidasViewState extends State<TelaConversorMedidasView> {
 
             const SizedBox(height: 16),
 
-            // ✅ Dois dropdowns lado a lado sem overflow
             Row(
               children: [
                 Expanded(
