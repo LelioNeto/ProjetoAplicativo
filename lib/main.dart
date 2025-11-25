@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:device_preview/device_preview.dart'; // <- import do Device Preview
 
 import 'firebase_options.dart';
 
@@ -16,12 +15,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(
-    DevicePreview(
-      enabled: true, // <- coloque false para desativar o Device Preview
-      builder: (context) => const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -30,18 +24,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'App de Receitas',
+      title: 'ChefList',
       debugShowCheckedModeBanner: false,
 
-      // =========================
-      //   🎨  TEMA GLOBAL
-      // =========================
       theme: ThemeData(
         brightness: Brightness.dark,
-
         scaffoldBackgroundColor: const Color(0xFF0F0F0F),
 
-        // Cor principal do app (vermelho padrão)
         primaryColor: const Color.fromARGB(255, 150, 54, 54),
 
         colorScheme: const ColorScheme.dark(
@@ -49,14 +38,12 @@ class MyApp extends StatelessWidget {
           secondary: Color.fromARGB(255, 150, 54, 54),
         ),
 
-        // Cursor, seleção e handles VERMELHOS em todo o app
         textSelectionTheme: const TextSelectionThemeData(
           cursorColor: Color.fromARGB(255, 150, 54, 54),
           selectionColor: Color.fromARGB(90, 150, 54, 54),
           selectionHandleColor: Color.fromARGB(255, 150, 54, 54),
         ),
 
-        // Estilo padrão dos TextFields
         inputDecorationTheme: const InputDecorationTheme(
           labelStyle: TextStyle(color: Colors.white70),
           enabledBorder: OutlineInputBorder(
@@ -70,12 +57,10 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        // Loading global em vermelho
         progressIndicatorTheme: const ProgressIndicatorThemeData(
           color: Color.fromARGB(255, 150, 54, 54),
         ),
 
-        // AppBar — seta voltar branca e fundo correto
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF1A1A1A),
           iconTheme: IconThemeData(color: Colors.white),
@@ -83,26 +68,19 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      // ============================================
-      //         ⚡ STREAM PARA LOGIN NO FIREBASE
-      // ============================================
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
+              body: Center(child: CircularProgressIndicator()),
             );
           }
 
-          // Usuário NÃO logado → Tela Principal
           if (!snapshot.hasData) {
             return const TelaPrincipalView();
           }
 
-          // Usuário logado → Menu principal
           return const MenuView();
         },
       ),
